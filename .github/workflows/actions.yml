@@ -12,8 +12,12 @@ jobs:
   update_manifest_repository:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+
+      - name: Configure Git credentials
+        run: |
+          git config --global credential.helper store
+          echo "https://${{ secrets.ACCESS_TOKEN }}@github.com" > ~/credentials
 
       - name: Configure Git user
         run: |
@@ -28,5 +32,4 @@ jobs:
         run: |
           git add helm/spring-boot/templates/deployment.yaml
           git commit -m "update image tag"
-          git push -u origin main
-
+          git push
