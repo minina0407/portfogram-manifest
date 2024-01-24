@@ -28,5 +28,5 @@ jobs:
         run: |
           git add helm/spring-boot/templates/deployment.yaml
           git commit -m "update image tag"
-          git push https://${{  secrets.MANIFEST_REPO_TOKEN }}@github.com/minina0407/portfogram-mainfest.git  
+          git push -u origin main
 
