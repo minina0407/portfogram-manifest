@@ -12,13 +12,10 @@ jobs:
   update_manifest_repository:
     runs-on: ubuntu-latest
     steps:
-      - name: Config Repository clone
+      - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          repository: minimeisme/local-spring-portfogram-manifests
-          ref: main
 
-      - name: Update image tag
+      - name: Update image tags
         run: |
           sed -i 's/latest/${{ env.IMAGE_REPO }}:latest/g' helm/spring-boot/templates/deployment.yaml
 
@@ -27,3 +24,4 @@ jobs:
           git add helm/spring-boot/templates/deployment.yaml
           git commit -m "update image tag"
           git push
+          
