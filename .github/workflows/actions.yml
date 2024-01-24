@@ -28,7 +28,7 @@ jobs:
         run: |
           sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/spring-boot/templates/deployment.yaml
 
-      - name: Commit and push changes
+      - name: Commit and  push changes
         run: |
           git add helm/spring-boot/templates/deployment.yaml
           git commit -m "update image tag"
