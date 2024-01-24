@@ -1,0 +1,30 @@
+name: UpdateManifestRepository
+
+on:
+  repository_dispatch:
+    types: [update-manifest]
+
+env:
+  DOCKER_REGISTRY: docker.io
+  IMAGE_REPO: ${{ github.event.client_payload.image_tag }}
+
+jobs:
+  update_manifest_repository:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Update image tags
+        run: |
+          for dir in helm/*/templates; do
+            for file in $dir/*.yaml; do
+              sed -i 's/latest/${{ env.IMAGE_REPO }}/g' $file
+            done
+          done
+
+      - name: Commit and push changes
+        run: |
+          git add helm
+          git commit -m "update image tags"
+          git push

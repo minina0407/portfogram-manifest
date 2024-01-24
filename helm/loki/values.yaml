@@ -1,0 +1,9 @@
+loki:
+  # https://github.com/grafana/helm-charts/blob/main/charts/loki/values.yaml
+  serviceMonitor:
+    enabled: true
+  nodeSelector:
+    hostname: worker-2
+  table_manager:
+    retention_deletes_enabled: true
+    retention_period: 72h  # 3일
