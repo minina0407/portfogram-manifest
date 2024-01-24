@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: {{ include "app.name" . }}
-          image: "minimeisme/local-spring-portfogram:latest"
+          image: "minimeisme/local-spring-portfogram:minimeisme/portfogram-argocd-k8s:latest"
           imagePullPolicy: Always
           ports:
             - name: http
