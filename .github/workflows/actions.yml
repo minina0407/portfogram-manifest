@@ -26,8 +26,12 @@ jobs:
 
       - name: Update image tags in all templates
         run: |
-          git add helm/**/*.yaml
-          sed -i 's#latest#'$IMAGE_REPO'#g' helm/**/*.yaml
+         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/spring-boot/templates/deployment.yaml
+         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/loki/templates/loki.yaml
+         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/kube-prometheus-stack/templates/kube-prometheus-stack.yaml
+         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/tempo/templates/tempo.yaml
+         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/promtail/templates/promtail.yaml
+      
 
       - name: Commit and push changes
         run: |
