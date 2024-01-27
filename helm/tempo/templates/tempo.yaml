@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fds
+  name: tempo
 spec:
   destination:
     name: ''
@@ -11,13 +11,5 @@ spec:
     path: helm/tempo
     repoURL: 'https://github.com/minina0407/portfogram-mainfest.git'
     targetRevision: HEAD
-    directory:
-      jsonnet:
-        tlas:
-          - {}
-    helm:
-      valueFiles: []
   sources: []
   project: default
-
-
