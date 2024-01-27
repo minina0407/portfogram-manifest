@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: {{ include "app.name" . }}
-          image: "${{ env.DOCKER_REGISTRY }}/{{ env.IMAGE_REPO }}"
+          image: "minimeisme/portfogram-argocd-k8s"
           imagePullPolicy: Always
           ports:
             - name: http
