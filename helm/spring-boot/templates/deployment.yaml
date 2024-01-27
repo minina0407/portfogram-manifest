@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: {{ include "app.name" . }}
-          image: "${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPO }}:${{ github.sha }}"
+          image: "{{ .Values.dockerRegistry }}/{{ .Values.imageRepo }}"
           imagePullPolicy: Always
           ports:
             - name: http
