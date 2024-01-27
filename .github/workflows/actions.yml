@@ -24,12 +24,14 @@ jobs:
           git config --global user.email "${{ secrets.GIT_EMAIL }}"
           git config --global user.name "${{ secrets.GIT_NAME }}"
 
-      - name: Update image tags
+      - name: Update image tags in all templates
         run: |
-          sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/spring-boot/templates/deployment.yaml
+            find helm -type f -name '*.yaml' -exec sed -i 's#latest#${{ env.IMAGE_REPO }}#g' {} \;
 
-      - name: Commit and  push changes
+      - name: Commit and push changes
         run: |
-          git add helm/spring-boot/templates/deployment.yaml
-          git commit -m "update image tag"
+          git add helm/**/*.yaml
+          git commit -m "Update image tags and configurations"
           git push -u origin main
+
+
