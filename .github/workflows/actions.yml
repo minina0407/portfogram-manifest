@@ -26,11 +26,7 @@ jobs:
 
       - name: Update image tags in all templates
         run: |
-         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/spring-boot/templates/deployment.yaml
-         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/loki/templates/loki.yaml
-         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/kube-prometheus-stack/templates/kube-prometheus-stack.yaml
-         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/tempo/templates/tempo.yaml
-         sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/promtail/templates/promtail.yaml
+          find helm -type f -name '*.yaml' -exec sed -i 's#latest#${{ env.IMAGE_REPO }}#g' {} \;
       
 
 
