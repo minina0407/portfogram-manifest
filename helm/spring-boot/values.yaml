@@ -1,2 +1,0 @@
-dockerRegistry: docker.io
-imageRepo: ${{ github.event.client_payload.image_tag }}

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: {{ include "app.name" . }}
-          image: "{{ .Values.dockerRegistry }}/{{ .Values.imageRepo }}"
+          image: "latest"
           imagePullPolicy: Always
           ports:
             - name: http

@@ -27,7 +27,13 @@ jobs:
       - name: Update image tags in all templates
         run: |
           find helm -type f -name '*.yaml' -exec sed -i 's#latest#${{ env.IMAGE_REPO }}#g' {} \;      
-          
+
+      - name: Commit and push changes
+        run: |
+          git add helm/**/*.yaml
+          git commit -m "Update image tags and configurations"
+          git push -u origin main
+
 
 
 
