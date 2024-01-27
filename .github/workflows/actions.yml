@@ -26,7 +26,7 @@ jobs:
 
       - name: Update image tags in all templates
         run: |
-          find helm -type f -name '*.yaml' -exec sed -i 's#latest#${{ env.IMAGE_REPO }}#g' {} \;      
+          find helm/spring-boot -type f -name 'values.yaml' -exec sed -i 's#latest#${{ env.IMAGE_REPO }}#g' {} \;     
 
       - name: Commit and push changes
         run: |
