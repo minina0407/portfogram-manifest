@@ -27,8 +27,12 @@ jobs:
       - name: Update image tags in all templates
         run: |
           find helm/spring-boot -type f -name 'values.yaml' -exec sed -i 's#latest#${{ github.event.client_payload.image_tag }}#g' {} \;
-    
 
+      - name: Commit and push changes
+        run: |
+          git add helm/**/*.yaml
+          git commit -m "Update image tags and configurations"
+          git push -u origin main
 
 
 
