@@ -33,9 +33,5 @@ jobs:
          sed -i 's#latest#${{ env.IMAGE_REPO }}#g' helm/promtail/templates/promtail.yaml
       
 
-      - name: Commit and push changes
-        run: |
-          git add helm/**/*.yaml
-          git commit -m "Update image tags and configurations"
 
 
