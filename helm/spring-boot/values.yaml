@@ -1,4 +1,3 @@
 
 image:
-  repository: "minimeisme/portfogram-argocd-k8s"
   tag: "latest"

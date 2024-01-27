@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: {{ include "app.name" . }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.tag }}"
           imagePullPolicy: Always
           ports:
             - name: http
