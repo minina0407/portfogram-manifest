@@ -5,9 +5,8 @@ version: 1.0.0-SNAPSHOT
 description: Chart to deploy grafana tempo
 
 dependencies:
-  # https://github.com/grafana/helm-charts/blob/main/charts/tempo/Chart.yaml
   - name: tempo
-    version: 0.16.2
+    version: 1.7.1
     repository: https://grafana.github.io/helm-charts
 
 

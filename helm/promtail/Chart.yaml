@@ -1,13 +1,12 @@
-# promtail Chart.yaml
+
 apiVersion: v2
 name: promtail
 version: 1.0.0-SNAPSHOT
 description: Chart to deploy grafana promtail
 
 dependencies:
-  # https://github.com/grafana/helm-charts/blob/main/charts/promtail/Chart.yaml
   - name: promtail
-    version: 6.4.0
+    version: 6.15.4
     repository: https://grafana.github.io/helm-charts
 
 

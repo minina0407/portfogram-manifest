@@ -3,16 +3,18 @@ kind: Application
 metadata:
   name: loki
 spec:
-  project: default
-  source:
-    repoURL: https://github.com/grafana/helm-charts
-    targetRevision: 2.16.0
-    chart: loki
-    helm:
-      valueFiles:
-        - helm/loki/values.yaml
   destination:
-    server: https://kubernetes.default.svc
+    name: ''
     namespace: loki
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: ''
+    repoURL: 'https://grafana.github.io/helm-charts'
+    targetRevision: 5.42.0
+    chart: loki
+  sources: []
+  project: default
   syncPolicy:
-    automated: {}
+    automated:
+      prune: false
+      selfHeal: false

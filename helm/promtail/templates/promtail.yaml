@@ -3,16 +3,19 @@ kind: Application
 metadata:
   name: promtail
 spec:
-  project: default
-  source:
-    repoURL: https://github.com/grafana/helm-charts
-    targetRevision: 6.4.0
-    chart: promtail
-    helm:
-      valueFiles:
-        - helm/promtail/values.yaml
   destination:
-    server: https://kubernetes.default.svc
+    name: ''
     namespace: promtail
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: helm/promtail
+    repoURL: 'https://github.com/minina0407/portfogram-mainfest.git'
+    targetRevision: HEAD
+    helm:
+      valueFiles: []
+  sources: []
+  project: default
   syncPolicy:
-    automated: {}
+    automated:
+      prune: true
+      selfHeal: true
