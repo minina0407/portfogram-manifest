@@ -1,3 +1,4 @@
+# Manifest Repository의 workflow
 name: UpdateManifestRepository
 
 on:
@@ -6,7 +7,6 @@ on:
 
 env:
   DOCKER_REGISTRY: docker.io
-  IMAGE_REPO: ${{ github.event.client_payload.image_tag }}
 
 jobs:
   update_manifest_repository:
@@ -24,16 +24,18 @@ jobs:
           git config --global user.email "${{ secrets.GIT_EMAIL }}"
           git config --global user.name "${{ secrets.GIT_NAME }}"
 
+      - name: Extract commit hash
+        id: extract_data
+        run: |
+          COMMIT_HASH=$(jq -r '.client_payload.commit_hash' $GITHUB_EVENT_PATH)
+          echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
+
       - name: Update image tags in all templates
         run: |
-          find helm/spring-boot -type f -name 'values.yaml' -exec sed -i 's#latest#${{ github.event.client_payload.image_tag }}#g' {} \;
+          find helm/spring-boot -type f -name 'values.yaml' -exec sed -i "s#latest#${COMMIT_HASH}#g" {} \;
 
       - name: Commit and push changes
         run: |
           git add helm/**/*.yaml
-          git commit -m "Update image tags and configurations"
+          git commit -m "Update image tags to $COMMIT_HASH and configurations"
           git push -u origin main
-
-
-
-
