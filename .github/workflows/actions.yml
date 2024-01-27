@@ -28,7 +28,7 @@ jobs:
         run: |
           find helm -type f -name '*.yaml' -exec sed -i 's#latest#${{ env.IMAGE_REPO }}#g' {} \;      
 
-\
+
 
 
 
