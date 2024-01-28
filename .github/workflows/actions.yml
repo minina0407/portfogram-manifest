@@ -1,3 +1,4 @@
+# Manifest Repository의 workflow
 name: UpdateManifestRepository
 
 on:
@@ -11,29 +12,43 @@ jobs:
   update_manifest_repository:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Check out code (App Repository)
         uses: actions/checkout@v2
         with:
+          repository: minina0407/PortfoGram-k8s  # App Repository의 소유자와 레포지토리 이름으로 수정
           ref: main
           token: ${{ secrets.APP_REPO_TOKEN }}
 
-      - name: Configure Git credentials
+      - name: Configure Git credentials (App Repository)
         run: |
           git config --global user.email "${{ secrets.GIT_EMAIL }}"
           git config --global user.name "${{ secrets.GIT_NAME }}"
 
-      - name: Extract commit hash from payload
-        id: extract_data
+      - name: Extract commit hash from App Repository
+        id: extract_data_app_repo
         run: |
-          TAG=${{ github.event.client_payload.commit_hash }}
-          echo "Received TAG: $TAG"  # Add logging for debugging
+          # App Repository를 Checkout하고 최근 커밋 해시 추출
+          COMMIT_HASH_APP_REPO=$(git rev-parse --short HEAD)
+          echo "COMMIT_HASH_APP_REPO=$COMMIT_HASH_APP_REPO" >> $GITHUB_ENV
+
+      - name: Check out code (Manifest Repository)
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      - name: Configure Git credentials (Manifest Repository)
+        run: |
+          git config --global user.email "${{ secrets.GIT_EMAIL }}"
+          git config --global user.name "${{ secrets.GIT_NAME }}"
+
 
       - name: Update image tags in all templates
         run: |
-          find helm/spring-boot -type f -name '*.yaml' -exec sed -i "s#latest#${TAG}#g" {} \;  # Enclose $TAG in double quotes
+          # Helm 차트 내의 모든 YAML 파일에서 이미지 태그를 업데이트
+          find helm/spring-boot -type f -name '*.yaml' -exec sed -i "s#latest#${COMMIT_HASH_APP_REPO}#g" {} \;
 
       - name: Commit and push changes
         run: |
           git add helm/**/*.yaml
-          git commit -m "Update image tags to $TAG and configurations"
+          git commit -m "Update image tags to $COMMIT_HASH_APP_REPO and configurations"
           git push -u origin main
