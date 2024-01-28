@@ -1,4 +1,3 @@
-# Manifest Repository의 workflow
 name: UpdateManifestRepository
 
 on:
@@ -27,15 +26,15 @@ jobs:
       - name: Extract commit hash
         id: extract_data
         run: |
-          COMMIT_HASH=$(jq -r '.client_payload.commit_hash' $GITHUB_EVENT_PATH)
-          echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
+          TAG=$(jq -r '.client_payload.commit_hash' $GITHUB_EVENT_PATH)
+          echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Update image tags in all templates
         run: |
-          find helm/spring-boot -type f -name 'values.yaml' -exec sed -i "s#latest#${COMMIT_HASH}#g" {} \;
+          find helm/spring-boot -type f -name 'values.yaml' -exec sed -i "s#latest#${{ env.TAG }}#g" {} \;
 
       - name: Commit and push changes
         run: |
           git add helm/**/*.yaml
-          git commit -m "Update image tags to $COMMIT_HASH and configurations"
+          git commit -m "Update image tags to $TAG and configurations"
           git push -u origin main
