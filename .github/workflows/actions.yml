@@ -1,3 +1,4 @@
+# Manifest Repository의 workflow
 name: UpdateManifestRepository
 
 on:
@@ -11,27 +12,28 @@ jobs:
   update_manifest_repository:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          ref: main
+          # 변경: Personal Access Token (PAT)을 사용하여 App Repository를 Checkout
+          token: ${{ secrets.APP_REPO_TOKEN }}
 
       - name: Configure Git credentials
-        run: |
-          git config --global credential.helper store
-          echo "https://${{ secrets.ACCESS_TOKEN }}@github.com" > ~/credentials
-
-      - name: Configure Git user
         run: |
           git config --global user.email "${{ secrets.GIT_EMAIL }}"
           git config --global user.name "${{ secrets.GIT_NAME }}"
 
-      - name: Extract commit hash
+      - name: Extract commit hash from App Repository
         id: extract_data
         run: |
-          TAG=$(jq -r '.client_payload.commit_hash' $GITHUB_EVENT_PATH)
+          # 변경: App Repository의 최근 커밋을 기준으로 TAG를 추출
+          TAG=$(git rev-parse --short HEAD)
           echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Update image tags in all templates
         run: |
-          find helm/spring-boot -type f -name 'values.yaml' -exec sed -i "s#latest#${{ env.TAG }}#g" {} \;
+          find helm/spring-boot -type f -name '*.yaml' -exec sed -i "s#latest#${{ env.TAG }}#g" {} \;
 
       - name: Commit and push changes
         run: |
