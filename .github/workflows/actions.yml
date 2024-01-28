@@ -26,11 +26,11 @@ jobs:
         id: extract_data
         run: |
           TAG=${{ github.event.client_payload.commit_hash }}
-          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "Received TAG: $TAG"  # Add logging for debugging
 
       - name: Update image tags in all templates
         run: |
-          find helm/spring-boot -type f -name '*.yaml' -exec sed -i "s#latest#${{ env.TAG }}#g" {} \;
+          find helm/spring-boot -type f -name '*.yaml' -exec sed -i "s#latest#${TAG}#g" {} \;  # Enclose $TAG in double quotes
 
       - name: Commit and push changes
         run: |
