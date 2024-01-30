@@ -41,6 +41,16 @@ spec:
             periodSeconds: 5
             failureThreshold: 30
           env:
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: SPRING_DATASOURCE_USERNAME
+                  name: database-credentials
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: SPRING_DATASOURCE_PASSWORD
+                  name: database-credentials
             - name: SERVER_PORT
               value: '8080'
             - name: MANAGEMENT_SERVER_PORT
