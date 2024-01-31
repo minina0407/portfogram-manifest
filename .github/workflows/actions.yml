@@ -42,10 +42,10 @@ jobs:
           git config --global user.name "${{ secrets.GIT_NAME }}"
 
 
-      - name: Update image tags in all templates
+      - name: Update image tags in spring templates
         run: |
-          # Helm 차트 내의 모든 YAML 파일에서 이미지 태그를 업데이트
-          find helm/spring-boot -type f -name '*.yaml' -exec sed -i "s#latest#${COMMIT_HASH_APP_REPO}#g" {} \;
+          find helm/spring-boo -type f -name '*.yaml' -exec sed -i "s#latest#${COMMIT_HASH_APP_REPO}#g" {} \;
+
 
       - name: Commit and push changes
         run: |
