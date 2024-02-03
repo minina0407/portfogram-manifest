@@ -6,15 +6,17 @@ metadata:
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - name: http
       port: 8080
       targetPort: http
       protocol: TCP
+      nodePort: 31395
     - name: http-management
       port: 8081
       targetPort: http-management
       protocol: TCP
+      nodePort: 31396
   selector:
     {{- include "app.selectorLabels" . | nindent 4 }}
