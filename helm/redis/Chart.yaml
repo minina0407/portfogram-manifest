@@ -1,0 +1,11 @@
+apiVersion: v2
+name: redis
+version: 1.0.0
+description: Chart to deploy Redis
+
+appVersion: "6.2.4"
+
+dependencies:
+  - name: redis
+    version: 6.2.4
+    repository: https://charts.bitnami.com/bitnami
