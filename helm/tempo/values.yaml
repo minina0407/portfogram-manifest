@@ -1,5 +1,17 @@
 tempo:
   serviceMonitor:
     enabled: true
-  nodeSelector:
-    hostname: worker-2
+  tolerations:
+    - key: "node"
+      operator: "Equal"
+      value: "worker-2"
+      effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: nodename
+                operator: In
+                values:
+                  - worker2

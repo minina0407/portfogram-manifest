@@ -31,3 +31,17 @@ redis:
         secretKeyRef:
           name: redis-password
           key: password
+  tolerations:
+    - key: "node"
+      operator: "Equal"
+      value: "worker1"
+      effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: nodename
+                operator: In
+                values:
+                  - worker1
