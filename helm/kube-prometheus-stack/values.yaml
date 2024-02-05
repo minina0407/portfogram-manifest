@@ -15,6 +15,11 @@ kube-prometheus-stack:
                     operator: In
                     values:
                       - worker-2
+          tolerations:
+            - key: "node-role.kubernetes.io/control-plane"
+              operator: "Exists"
+              effect: "NoSchedule"
+              tolerationSeconds: null
   grafana:
     service:
      type: NodePort
