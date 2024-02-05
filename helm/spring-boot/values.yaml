@@ -5,7 +5,7 @@ image:
 tolerations:
   - key: "node"
     operator: "Equal"
-    value: "worker-2"
+    value: "worker1"
     effect: "NoSchedule"
 
 affinity:
