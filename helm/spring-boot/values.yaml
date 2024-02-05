@@ -1,11 +1,11 @@
 # values.yaml
 image:
-  tag: "cd8a5d3"
+  tag: "latest"
 
 tolerations:
   - key: "node"
     operator: "Equal"
-    value: "worker1"
+    value: "worker-2"
     effect: "NoSchedule"
 
 affinity:

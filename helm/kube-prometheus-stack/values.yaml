@@ -6,6 +6,11 @@ kube-prometheus-stack:
       serviceMonitorSelectorNilUsesHelmValues: false
       enableFeatures:
         - exemplar-storage
+      tolerations:
+        - key: "node"
+          operator: "Equal"
+          value: "worker-2"
+          effect: "NoSchedule"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
