@@ -63,6 +63,14 @@ kube-prometheus-stack:
         disable_login_form: false
       auth.anonymous:
         enabled: true
-    nodeSelector:
-      nodename: worker2
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nodename
+                    operator: In
+                    values:
+                      - worker2
+
 
