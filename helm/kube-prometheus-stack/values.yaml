@@ -6,6 +6,11 @@ kube-prometheus-stack:
       serviceMonitorSelectorNilUsesHelmValues: false
       enableFeatures:
         - exemplar-storage
+    prometheusOperator:
+      tls:
+        enabled: false
+      admissionWebhooks:
+        enabled: false
   grafana:
     service:
       type: NodePort
