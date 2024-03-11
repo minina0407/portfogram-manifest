@@ -1,153 +1,160 @@
-global:
-  evaluation_interval: 30s
-  scrape_interval: 15s
-  external_labels:
-    prometheus: monitoring/staging
-    prometheus_replica: $(POD_NAME)
-scrape_configs:
-  - job_name: node-exporter
-    static_configs:
-      - targets: ['localhost:9100']
-  - job_name: cadvisor
-    static_configs:
-      - targets: ['localhost:8080']
-  - job_name: spring-actuator-prometheus
-    scrape_timeout: 10s
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['10.146.0.12:31396']
-  - job_name: serviceMonitor/monitoring/portfogram/0
-    honor_labels: false
-    kubernetes_sd_configs:
-      - role: endpoints
-        namespaces:
-          names:
-            - monitoring
-    scrape_interval: 15s
-    scrape_timeout: 10s
-    metrics_path: /actuator/prometheus
-    relabel_configs:
-      - source_labels:
-          - job
-        target_label: __tmp_prometheus_job_name
-      - action: keep
-        source_labels:
-          - __meta_kubernetes_service_label_app_kubernetes_io_name
-          - __meta_kubernetes_service_labelpresent_app_kubernetes_io_name
-        regex: (portfogram);true
-      - action: keep
-        source_labels:
-          - __meta_kubernetes_endpoint_port_name
-        regex: "31396"
-      - source_labels:
-          - __meta_kubernetes_endpoint_address_target_kind
-          - __meta_kubernetes_endpoint_address_target_name
-        separator: ;
-        regex: Node;(.*)
-        replacement: ${1}
-        target_label: node
-      - source_labels:
-          - __meta_kubernetes_endpoint_address_target_kind
-          - __meta_kubernetes_endpoint_address_target_name
-        separator: ;
-        regex: Pod;(.*)
-        replacement: ${1}
-        target_label: pod
-      - source_labels:
-          - __meta_kubernetes_namespace
-        target_label: namespace
-      - source_labels:
-          - __meta_kubernetes_service_name
-        target_label: service
-      - source_labels:
-          - __meta_kubernetes_pod_name
-        target_label: pod
-      - source_labels:
-          - __meta_kubernetes_pod_container_name
-        target_label: container
-      - action: drop
-        source_labels:
-          - __meta_kubernetes_pod_phase
-        regex: (Failed|Succeeded)
-      - source_labels:
-          - __meta_kubernetes_service_name
-        target_label: job
-        replacement: ${1}
-      - target_label: endpoint
-        replacement: "31396"
-      - source_labels:
-          - __address__
-        target_label: __tmp_hash
-        modulus: 1
-        action: hashmod
-      - source_labels:
-          - __tmp_hash
-        regex: $(SHARD)
-        action: keep
-    metric_relabel_configs: []
-  - job_name: serviceMonitor/monitoring/prometheus/0
-    honor_labels: false
-    kubernetes_sd_configs:
-      - role: endpoints
-        namespaces:
-          names:
-            - monitoring
-    relabel_configs:
-      - source_labels:
-          - job
-        target_label: __tmp_prometheus_job_name
-      - action: keep
-        source_labels:
-          - __meta_kubernetes_service_label_operated_prometheus
-          - __meta_kubernetes_service_labelpresent_operated_prometheus
-        regex: (true);true
-      - action: keep
-        source_labels:
-          - __meta_kubernetes_endpoint_port_name
-        regex: web
-      - source_labels:
-          - __meta_kubernetes_endpoint_address_target_kind
-          - __meta_kubernetes_endpoint_address_target_name
-        separator: ;
-        regex: Node;(.*)
-        replacement: ${1}
-        target_label: node
-      - source_labels:
-          - __meta_kubernetes_endpoint_address_target_kind
-          - __meta_kubernetes_endpoint_address_target_name
-        separator: ;
-        regex: Pod;(.*)
-        replacement: ${1}
-        target_label: pod
-      - source_labels:
-          - __meta_kubernetes_namespace
-        target_label: namespace
-      - source_labels:
-          - __meta_kubernetes_service_name
-        target_label: service
-      - source_labels:
-          - __meta_kubernetes_pod_name
-        target_label: pod
-      - source_labels:
-          - __meta_kubernetes_pod_container_name
-        target_label: container
-      - action: drop
-        source_labels:
-          - __meta_kubernetes_pod_phase
-        regex: (Failed|Succeeded)
-      - source_labels:
-          - __meta_kubernetes_service_name
-        target_label: job
-        replacement: ${1}
-      - target_label: endpoint
-        replacement: web
-      - source_labels:
-          - __address__
-        target_label: __tmp_hash
-        modulus: 1
-        action: hashmod
-      - source_labels:
-          - __tmp_hash
-        regex: $(SHARD)
-        action: keep
-    metric_relabel_configs: []
+prometheus:
+  config: |
+    global:
+      evaluation_interval: 30s
+      scrape_interval: 15s
+      external_labels:
+        prometheus: monitoring/staging
+        prometheus_replica: $(POD_NAME)
+
+    scrape_configs:
+      - job_name: node-exporter
+        static_configs:
+          - targets: ['localhost:9100']
+
+      - job_name: cadvisor
+        static_configs:
+          - targets: ['localhost:8080']
+
+      - job_name: spring-actuator-prometheus
+        scrape_timeout: 10s
+        metrics_path: /actuator/prometheus
+        static_configs:
+          - targets: ['10.146.0.12:31396']
+
+      - job_name: serviceMonitor/monitoring/portfogram/0
+        honor_labels: false
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - monitoring
+        scrape_interval: 15s
+        scrape_timeout: 10s
+        metrics_path: /actuator/prometheus
+        relabel_configs:
+          - source_labels:
+              - job
+            target_label: __tmp_prometheus_job_name
+          - action: keep
+            source_labels:
+              - __meta_kubernetes_service_label_app_kubernetes_io_name
+              - __meta_kubernetes_service_labelpresent_app_kubernetes_io_name
+            regex: (portfogram);true
+          - action: keep
+            source_labels:
+              - __meta_kubernetes_endpoint_port_name
+            regex: "31396"
+          - source_labels:
+              - __meta_kubernetes_endpoint_address_target_kind
+              - __meta_kubernetes_endpoint_address_target_name
+            separator: ;
+            regex: Node;(.*)
+            replacement: ${1}
+            target_label: node
+          - source_labels:
+              - __meta_kubernetes_endpoint_address_target_kind
+              - __meta_kubernetes_endpoint_address_target_name
+            separator: ;
+            regex: Pod;(.*)
+            replacement: ${1}
+            target_label: pod
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+          - source_labels:
+              - __meta_kubernetes_service_name
+            target_label: service
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: pod
+          - source_labels:
+              - __meta_kubernetes_pod_container_name
+            target_label: container
+          - action: drop
+            source_labels:
+              - __meta_kubernetes_pod_phase
+            regex: (Failed|Succeeded)
+          - source_labels:
+              - __meta_kubernetes_service_name
+            target_label: job
+            replacement: ${1}
+          - target_label: endpoint
+            replacement: "31396"
+          - source_labels:
+              - __address__
+            target_label: __tmp_hash
+            modulus: 1
+            action: hashmod
+          - source_labels:
+              - __tmp_hash
+            regex: $(SHARD)
+            action: keep
+        metric_relabel_configs: []
+
+      - job_name: serviceMonitor/monitoring/prometheus/0
+        honor_labels: false
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - monitoring
+        relabel_configs:
+          - source_labels:
+              - job
+            target_label: __tmp_prometheus_job_name
+          - action: keep
+            source_labels:
+              - __meta_kubernetes_service_label_operated_prometheus
+              - __meta_kubernetes_service_labelpresent_operated_prometheus
+            regex: (true);true
+          - action: keep
+            source_labels:
+              - __meta_kubernetes_endpoint_port_name
+            regex: web
+          - source_labels:
+              - __meta_kubernetes_endpoint_address_target_kind
+              - __meta_kubernetes_endpoint_address_target_name
+            separator: ;
+            regex: Node;(.*)
+            replacement: ${1}
+            target_label: node
+          - source_labels:
+              - __meta_kubernetes_endpoint_address_target_kind
+              - __meta_kubernetes_endpoint_address_target_name
+            separator: ;
+            regex: Pod;(.*)
+            replacement: ${1}
+            target_label: pod
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+          - source_labels:
+              - __meta_kubernetes_service_name
+            target_label: service
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: pod
+          - source_labels:
+              - __meta_kubernetes_pod_container_name
+            target_label: container
+          - action: drop
+            source_labels:
+              - __meta_kubernetes_pod_phase
+            regex: (Failed|Succeeded)
+          - source_labels:
+              - __meta_kubernetes_service_name
+            target_label: job
+            replacement: ${1}
+          - target_label: endpoint
+            replacement: web
+          - source_labels:
+              - __address__
+            target_label: __tmp_hash
+            modulus: 1
+            action: hashmod
+          - source_labels:
+              - __tmp_hash
+            regex: $(SHARD)
+            action: keep
+        metric_relabel_configs: []
