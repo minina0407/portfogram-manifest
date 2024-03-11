@@ -1,6 +1,6 @@
 # values.yaml
 image:
-  tag: "latest"
+  tag: "51f0ceb"
 
 tolerations:
   - key: "node"
