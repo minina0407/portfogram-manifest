@@ -1,5 +1,5 @@
 image:
-  tag: "51f0ceb"
+  tag: "latest"
 
 tolerations:
   - key: "node"
