@@ -46,10 +46,11 @@ spec:
                 secretKeyRef:
                   name: sealed-database-credentials
                   key: SPRING_DATASOURCE_USERNAME
+
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: sealed-database-credentials
+                  name: ssealed-database-credentials
                   key: SPRING_DATASOURCE_PASSWORD
             - name: SERVER_PORT
               value: '8080'
@@ -67,3 +68,4 @@ spec:
               value: pod=$(KUBE_POD_NAME),namespace={{ .Release.Namespace }}
             - name: OTEL_METRICS_EXPORTER
               value: none
+
