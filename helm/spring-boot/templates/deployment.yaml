@@ -50,7 +50,7 @@ spec:
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: ssealed-database-credentials
+                  name: sealed-database-credentials
                   key: SPRING_DATASOURCE_PASSWORD
             - name: SERVER_PORT
               value: '8080'
