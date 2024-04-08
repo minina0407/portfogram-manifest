@@ -16,3 +16,6 @@ affinity:
               operator: In
               values:
                 - worker1
+secret:
+  enabled: true
+  name: mysql-secret
