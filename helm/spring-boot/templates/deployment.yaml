@@ -4,7 +4,7 @@ metadata:
   name: {{ include "app.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-  {{- include "app.labels" . | nindent 4 }}
+    {{- include "app.labels" . | nindent 4 }}
 spec:
   revisionHistoryLimit: 0
   selector:
@@ -15,49 +15,56 @@ spec:
       labels:
         {{- include "app.labels" . | nindent 8 }}
     spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ include "app.name" . }}
+          securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
           image: "minimeisme/portfogram-argocd-k8s:{{ .Values.image.tag }}"
           imagePullPolicy: Always
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: {{ .Values.container.httpPort }}
               protocol: TCP
             - name: http-management
-              containerPort: 8081
+              containerPort: {{ .Values.container.managementPort }}
               protocol: TCP
+        {{- if .Values.probes.readiness.enabled }}
           readinessProbe:
             httpGet:
-              path: /actuator/health/readiness
-              port: 8081
+              path: {{ .Values.probes.readiness.path }}
+              port: {{ .Values.container.managementPort }}
+        {{- end }}
+        {{- if .Values.probes.liveness.enabled }}
           livenessProbe:
             httpGet:
-              path: /actuator/health/liveness
-              port: 8081
+              path: {{ .Values.probes.liveness.path }}
+              port: {{ .Values.container.managementPort }}
+        {{- end }}
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8081
-            periodSeconds: 5
-            failureThreshold: 30
+              port: {{ .Values.container.managementPort }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
           env:
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: database-credentials
+                  name: {{ .Values.secret.name }}
                   key: SPRING_DATASOURCE_USERNAME
-
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: database-credentials
+                  name: {{ .Values.secret.name }}
                   key: SPRING_DATASOURCE_PASSWORD
             - name: SERVER_PORT
-              value: '8080'
+              value: {{ .Values.container.httpPort | quote }}
             - name: MANAGEMENT_SERVER_PORT
-              value: '8081'
+              value: {{ .Values.container.managementPort | quote }}
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://tempo.tempo:4317
+              value: {{ .Values.otel.exporterOtlpEndpoint }}
             - name: OTEL_SERVICE_NAME
               value: {{ include "app.name" . }}
             - name: KUBE_POD_NAME
@@ -67,5 +74,4 @@ spec:
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: pod=$(KUBE_POD_NAME),namespace={{ .Release.Namespace }}
             - name: OTEL_METRICS_EXPORTER
-              value: none
-
+              value: {{ .Values.otel.metricsExporter }}

@@ -1,8 +1,6 @@
-#spring-boot Chart.yaml
 apiVersion: v2
-name: localportfogram
-version: 0.0.1-SNAPSHOT
-description: Chart for applications based on Spring (Boot)
+appVersion: 0.1.0
+description: A Helm chart for k8s
+name: portfogram-server
 type: application
-
-
+version: 0.1.0

@@ -1,10 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "app.servicename" . }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "portfogram-server.fullname" .}}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    {{- include "portfogram-server.labels" . | nindent 4 }}
 spec:
   type: NodePort
   ports:
@@ -12,11 +11,11 @@ spec:
       port: 8080
       targetPort: http
       protocol: TCP
-      nodePort: 31395
+      nodePort: {{ .Values.service.nodePort }}
     - name: http-management
       port: 8081
       targetPort: http-management
       protocol: TCP
-      nodePort: 31396
+      nodePort: {{ .Values.service.managementNodePort }}
   selector:
-    {{- include "app.selectorLabels" . | nindent 4 }}
+    {{- include "portfogram-server.selectorLabels" . | nindent 4 }}
