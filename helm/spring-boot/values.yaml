@@ -1,6 +1,6 @@
 image:
   repository: minimeisme/portfogram-argocd-k8s
-  tag: "latest"
+  tag: "51f0ceb"
   pullPolicy: Always
 
 fullnameOverride: ""
