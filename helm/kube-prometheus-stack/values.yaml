@@ -13,8 +13,7 @@ kube-prometheus-stack:
         enabled: false
   grafana:
     service:
-      type: NodePort
-      nodePort: 31000
+      type: ClusterIP
     sidecar:
       dashboards:
         searchNamespace: ALL
@@ -68,14 +67,5 @@ kube-prometheus-stack:
         disable_login_form: false
       auth.anonymous:
         enabled: true
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: nodename
-                    operator: In
-                    values:
-                      - worker2
 
 

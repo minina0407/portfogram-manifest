@@ -4,20 +4,6 @@ loki:
   table_manager:
     retention_deletes_enabled: true
     retention_period: 72h  # 3일
-  tolerations:
-    - key: "node"
-      operator: "Equal"
-      value: "worker-2"
-      effect: "NoSchedule"
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: nodename
-                operator: In
-                values:
-                  - worker2
 
 
 

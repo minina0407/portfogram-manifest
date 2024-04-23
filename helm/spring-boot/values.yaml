@@ -1,6 +1,6 @@
 image:
   repository: minimeisme/portfogram-argocd-k8s
-  tag: "51f0ceb"
+  tag: "latest"
   pullPolicy: Always
 
 fullnameOverride: ""
@@ -31,10 +31,8 @@ metrics:
   path: "/actuator/prometheus"
 
 service:
-  type: NodePort
+  type: ClusterIP
   port: 8080
-  nodePort: 31395
-  managementNodePort: 31396
 
 configMap:
   enabled: true
