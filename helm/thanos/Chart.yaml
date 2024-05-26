@@ -1,5 +1,0 @@
-apiVersion: v2
-name: thanos
-description: A Helm chart for Thanos components
-type: application
-version: 1.0.0

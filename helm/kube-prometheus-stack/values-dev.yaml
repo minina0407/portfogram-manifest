@@ -1,0 +1,24 @@
+prometheus:
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: standard-rwo
+          resources:
+            requests:
+              storage: 10Gi
+
+grafana:
+  enabled: false
+
+ingress:
+  enabled: true
+  name: ingress-grafana
+  class: nginx
+  clusterIssuer: letsencrypt-prod
+  hosts: grafana-dev.ingress.minimeisme.com
+  tlsSecret: grafana-tls
+  path: /
+  serviceName: portfogram-monitoring-grafana
+  servicePort: 3000
