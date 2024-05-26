@@ -1,0 +1,100 @@
+# values-dev.yaml
+
+# Default values for spring-boot.
+image:
+  repository: minimeisme/portfogram-argocd-k8s
+  tag: "51f0ceb"
+  pullPolicy: Always
+
+fullnameOverride: ""
+nameOverride: ""
+
+# Security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 2000
+  fsGroup: 3000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  privileged: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+# Network
+container:
+  httpPort: 8080
+  managementPort: 8081
+
+metrics:
+  enabled: false
+  path: "/actuator/prometheus"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+labels:
+  app.kubernetes.io/instance: "spring"
+  app.kubernetes.io/name: "portfogram-server"
+
+configMap:
+  enabled: true
+
+# Authentication
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+env:
+  KUBE_POD_NAME:
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+
+# Probes
+probes:
+  readiness:
+    enabled: true
+    path: /actuator/health/readiness
+  liveness:
+    enabled: true
+    path: /actuator/health/liveness
+  startup:
+    periodSeconds: 5
+    failureThreshold: 30
+
+secret:
+  enabled: true
+  name: database-credentials
+
+otel:
+  exporterOtlpEndpoint: http://tempo.tempo:4317
+
+# 공통 Ingress 설정
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/acme-challenge-type: http01
+    cert-manager.io/cluster-issuer: letsencrypt-dev
+
+  tls:
+    - hosts:
+        - dev.minimeisme.com
+      secretName: dev-spring-cert-tls
+  hosts:
+    - host: dev.minimeisme.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service:
+            name: spring-portfogram-server
+            port: 8080

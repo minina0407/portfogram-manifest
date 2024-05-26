@@ -1,3 +1,0 @@
-prometheusOperator:
-  enabled: true
-  createCustomResource: true
