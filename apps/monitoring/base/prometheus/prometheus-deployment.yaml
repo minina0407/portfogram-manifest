@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: observability
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.30.3
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--web.enable-lifecycle"
+            - "--web.enable-admin-api"
+            - "--storage.tsdb.min-block-duration=2h"
+            - "--storage.tsdb.max-block-duration=2h"
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: prometheus-storage
+              mountPath: /prometheus
+            - name: prometheus-config
+              mountPath: /etc/prometheus
+        - name: thanos-sidecar
+          image: quay.io/thanos/thanos:v0.31.0
+          args:
+            - "sidecar"
+            - "--prometheus.url=http://localhost:9090"
+            - "--tsdb.path=/prometheus"
+            - "--objstore.config-file=/etc/thanos/objstore.yaml"
+          ports:
+            - containerPort: 10901
+          volumeMounts:
+            - name: prometheus-storage
+              mountPath: /prometheus
+            - name: thanos-config
+              mountPath: /etc/thanos
+      volumes:
+        - name: prometheus-storage
+          emptyDir: {}
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
+        - name: thanos-config
+          configMap:
+            name: thanos-objstore-config
+            items:
+              - key: objstore.yaml
+                path: objstore.yaml

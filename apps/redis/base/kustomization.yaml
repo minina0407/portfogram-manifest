@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - redis-deployment.yaml
+  - redis-service.yaml
+
+configMapGenerator:
+  - name: redis-config
+    literals:
+      - spring_redis_host=redis
+      - spring_redis_port=6379
+      - spring_cache_type=redis
+
+secretGenerator:
+  - name: redis-password
+    literals:
+      - spring_redis_password=redis

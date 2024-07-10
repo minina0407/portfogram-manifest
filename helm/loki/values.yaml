@@ -1,9 +1,0 @@
-loki:
-  serviceMonitor:
-    enabled: true
-  table_manager:
-    retention_deletes_enabled: true
-    retention_period: 72h  # 3일
-
-
-

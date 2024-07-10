@@ -1,0 +1,77 @@
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+query:
+  enabled: true
+  replicaCount: 1
+  logLevel: info
+  stores:
+    - dnssrv+_grpc._tcp.thanos-sidecar.observability.svc.cluster.local
+    - dnssrv+_grpc._tcp.thanos-store.observability.svc.cluster.local
+  service:
+    type: ClusterIP
+    http:
+      port: 9090
+    grpc:
+      port: 10901
+
+queryFrontend:
+  enabled: false
+
+store:
+  enabled: true
+  replicaCount: 2
+  logLevel: info
+  dataDir: /data
+  service:
+    type: ClusterIP
+    http:
+      port: 10902
+    grpc:
+      port: 10901
+  volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+    - name: data
+      emptyDir: {}
+
+compact:
+  enabled: true
+  replicaCount: 2
+  logLevel: info
+  retentionResolutionRaw: 30d
+  retentionResolution5m: 30d
+  retentionResolution1h: 10y
+  dataDir: /data
+  volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+    - name: data
+      emptyDir: {}
+
+receive:
+  enabled: false
+
+rule:
+  enabled: false
+
+objstore:
+  type: FILESYSTEM
+  config:
+    directory: /mnt/data
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,19 @@
+# path: argocd/app-of-apps.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portfogram
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/minina0407/kustomzie_for_portfogram.git
+    targetRevision: HEAD
+    path: argocd/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

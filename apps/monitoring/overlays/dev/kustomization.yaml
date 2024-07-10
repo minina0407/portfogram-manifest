@@ -1,0 +1,15 @@
+# path : apps/monitoring/overlays/dev/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+    - ../../base/prometheus
+    - ../../base/grafana
+    - ../../base/promtail
+    - ../../base/loki
+    - ../../base/tempo
+    - ../../base/thanos
+
+
+
+

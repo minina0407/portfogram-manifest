@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thanos-query
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thanos-query
+  template:
+    metadata:
+      labels:
+        app: thanos-query
+    spec:
+      serviceAccountName: thanos-query
+      containers:
+        - name: thanos-query
+          image: quay.io/thanos/thanos:v0.28.0
+          args:
+            - "query"
+            - "--store=dnssrv+_grpc._tcp.thanos-store.thanos.svc.cluster.local"
+          ports:
+            - name: http
+              containerPort: 10902
+            - name: grpc
+              containerPort: 10901

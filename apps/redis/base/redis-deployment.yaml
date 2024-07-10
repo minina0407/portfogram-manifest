@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  serviceName: "redis"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+              name: redis
+          env:
+            - name: spring_redis_host
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: spring_redis_host
+            - name: spring_redis_port
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: spring_redis_port
+            - name: spring_cache_type
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: spring_cache_type
+            - name: spring_redis_password
+              valueFrom:
+                secretKeyRef:
+                  name: redis-password
+                  key: spring_redis_password
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 8Gi

@@ -1,3 +1,0 @@
-tempo:
-  serviceMonitor:
-    enabled: true

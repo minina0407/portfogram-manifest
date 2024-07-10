@@ -1,0 +1,4 @@
+# Ignore all Helm chart directories except spring-boot
+apps/**/base/**/charts/**
+# Do not ignore spring-boot Helm chart
+!apps/spring-boot/**
