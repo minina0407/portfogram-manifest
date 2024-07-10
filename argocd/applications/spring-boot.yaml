@@ -1,0 +1,22 @@
+# path: argocd/applications/spring-boot.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spring-boot
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/minina0407/kustomzie_for_portfogram.git
+    targetRevision: HEAD
+    path: apps/spring-boot
+    helm:
+      valueFiles:
+        - values-dev.yaml
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

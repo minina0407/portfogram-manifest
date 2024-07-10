@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: thanos-compact
+  namespace: observability
+spec:
+  schedule: "0 2 * * *"  # 매일 2시에 실행
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: thanos-compact
+        spec:
+          containers:
+            - name: thanos-compact
+              image: quay.io/thanos/thanos:v0.28.0
+              args:
+                - "compact"
+                - "--data-dir=/var/thanos/compact"
+                - "--objstore.config-file=/etc/thanos/objectstorage.yaml"
+              ports:
+                - name: http
+                  containerPort: 10902
+              volumeMounts:
+                - name: objectstorage-config
+                  mountPath: /etc/thanos
+                - name: data
+                  mountPath: /var/thanos/compact
+                - name: storage
+                  mountPath: /mnt/storage
+          restartPolicy: Never
+          volumes:
+            - name: objectstorage-config
+              secret:
+                secretName: thanos-objectstorage
+            - name: data
+              persistentVolumeClaim:
+                claimName: thanos-compact-data
+            - name: storage
+              persistentVolumeClaim:
+                claimName: thanos-storage-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: thanos-compact-data
+  namespace: observability
+spec:
+  storageClassName: standard-rwo
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: thanos-storage-pvc
+  namespace: observability
+spec:
+  storageClassName: standard-rwo
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

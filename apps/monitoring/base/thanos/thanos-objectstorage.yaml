@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-objectstorage
+  namespace: observability
+type: Opaque
+data:
+  objectstorage.yaml: dHlwZTogRklMRVNZU1RFTQ0KY29uZmlnOg0KICBkaXJlY3Rvcnk6IC9tbnQvZGF0YQ==
