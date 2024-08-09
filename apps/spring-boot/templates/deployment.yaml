@@ -20,7 +20,7 @@ spec:
       containers:
         - name: {{ include "app.name" . }}
           securityContext:
-          {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "minimeisme/portfogram-argocd-k8s:{{ .Values.image.tag }}"
           imagePullPolicy: Always
           ports:
@@ -30,18 +30,18 @@ spec:
             - name: http-management
               containerPort: {{ .Values.container.managementPort }}
               protocol: TCP
-        {{- if .Values.probes.readiness.enabled }}
+          {{- if .Values.probes.readiness.enabled }}
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.readiness.path }}
               port: {{ .Values.container.managementPort }}
-        {{- end }}
-        {{- if .Values.probes.liveness.enabled }}
+          {{- end }}
+          {{- if .Values.probes.liveness.enabled }}
           livenessProbe:
             httpGet:
               path: {{ .Values.probes.liveness.path }}
               port: {{ .Values.container.managementPort }}
-        {{- end }}
+          {{- end }}
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
