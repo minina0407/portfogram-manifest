@@ -77,13 +77,19 @@ secret:
 otel:
   exporterOtlpEndpoint: http://tempo.tempo:4317
 
+# 공통 Ingress 설정
 ingress:
   enabled: true
   className: "nginx"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-dev"
-    kubernetes.io/ingress.class: "nginx"
-    cert-manager.io/acme-challenge-type: "http01"
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/acme-challenge-type: http01
+    cert-manager.io/cluster-issuer: letsencrypt-dev
+
+  tls:
+    - hosts:
+        - dev.minimeisme.com
+      secretName: dev-spring-cert-tls
   hosts:
     - host: dev.minimeisme.com
       paths:
@@ -92,7 +98,3 @@ ingress:
           service:
             name: spring-portfogram-server
             port: 8080
-  tls:
-    - hosts:
-        - dev.minimeisme.com
-      secretName: dev-spring-cert-tls
