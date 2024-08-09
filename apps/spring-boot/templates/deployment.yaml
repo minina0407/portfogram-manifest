@@ -4,16 +4,19 @@ metadata:
   name: {{ include "app.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/instance: spring
+    app.kubernetes.io/name: portfogram-server
 spec:
   revisionHistoryLimit: 0
   selector:
     matchLabels:
-      {{- include "app.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/instance: spring
+      app.kubernetes.io/name: portfogram-server
   template:
     metadata:
       labels:
-        {{- include "app.labels" . | nindent 8 }}
+        app.kubernetes.io/instance: spring
+        app.kubernetes.io/name: portfogram-server
     spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
