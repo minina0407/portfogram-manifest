@@ -17,6 +17,10 @@ spec:
       labels:
         app.kubernetes.io/instance: spring
         app.kubernetes.io/name: portfogram-server
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8081"
     spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}

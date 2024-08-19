@@ -30,7 +30,7 @@ container:
   managementPort: 8081
 
 metrics:
-  enabled: false
+  enabled: true
   path: "/actuator/prometheus"
 
 service:
