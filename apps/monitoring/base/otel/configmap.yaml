@@ -23,17 +23,6 @@ data:
     
     processors:
       batch:
-      filter:
-        metrics:
-          include:
-            match_type: regexp
-            metric_names:
-              - .*
-      transform:
-        metric_statements:
-          - context: metric
-            statements:
-              - set(metric.name, "transformed_" + metric.name)
     
     exporters:
       logging:
@@ -44,9 +33,6 @@ data:
           insecure: true
       prometheus:
         endpoint: "0.0.0.0:8889"
-        namespace: ""
-        const_labels:
-          exported: "true"
       loki:
         endpoint: "http://loki-loki.observability:3100/loki/api/v1/push"
     
@@ -58,7 +44,7 @@ data:
           exporters: [otlp, logging]
         metrics:
           receivers: [otlp, prometheus]
-          processors: [batch, filter, transform]
+          processors: [batch]
           exporters: [prometheus, logging]
         logs:
           receivers: [otlp]
