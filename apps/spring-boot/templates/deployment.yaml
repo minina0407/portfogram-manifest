@@ -71,7 +71,7 @@ spec:
             - name: MANAGEMENT_SERVER_PORT
               value: {{ .Values.container.managementPort | quote }}
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: {{ .Values.otel.exporterOtlpEndpoint }}
+              value: "http://otel-collector.observability:4317"
             - name: OTEL_SERVICE_NAME
               value: {{ include "app.name" . }}
             - name: KUBE_POD_NAME
@@ -79,6 +79,10 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OTEL_RESOURCE_ATTRIBUTES
-              value: pod=$(KUBE_POD_NAME),namespace={{ .Release.Namespace }}
+              value: "pod=$(KUBE_POD_NAME),namespace={{ .Release.Namespace }}"
             - name: OTEL_METRICS_EXPORTER
-              value: {{ .Values.otel.metricsExporter }}
+              value: "otlp"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_LOGS_EXPORTER
+              value: "otlp"

@@ -43,7 +43,7 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: pod
-            
+      
       - job_name: 'spring-apps'
         metrics_path: /actuator/prometheus
         kubernetes_sd_configs:
@@ -72,3 +72,18 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: kubernetes_pod_name
+      - job_name: 'otel-collector'
+        scrape_interval: 10s
+        static_configs:
+          - targets: ['otel-collector.observability:8889']
+        metric_relabel_configs:
+          - action: labeldrop
+            regex: ^exported_.*
+          - action: labelmap
+            regex: ^otel_(.+)
+            replacement: ${1}
+          - action: replace
+            source_labels: [__name__]
+            regex: ^otel_otel_otel_(.+)
+            target_label: __name__
+            replacement: ${1}

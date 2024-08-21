@@ -1,13 +1,11 @@
-helmCharts:
-  - name: grafana
-    repo: https://grafana.github.io/helm-charts
-    releaseName: grafana
-    namespace: observability
-    valuesFile: values.yaml
-    version: 6.56.5
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 
-helmGlobals:
-    # Store chart in ".charts" folder instead of "charts".
-    # Otherwise "go mod tidy" picks up dependencies of go files contained in the Helm Chart.
-    # "go mod tidy" ignores folders that begin with ".": https://pkg.go.dev/cmd/go#hdr-Package_lists_and_patterns.
-    chartHome: charts
+namespace: observability
+
+resources:
+  - grafana-config.yaml
+  - grafana-dashboard-config.yaml
+  - grafana-deployment.yaml
+  - grafana-service.yaml
+  - grafana-datasources-config.yaml

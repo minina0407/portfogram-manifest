@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: observability
+  labels:
+    app: opentelemetry
+    component: otel-collector-config
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'otel-collector'
+              scrape_interval: 10s
+              static_configs:
+                - targets: ['0.0.0.0:8889']
+    
+    processors:
+      batch:
+      filter:
+        metrics:
+          include:
+            match_type: regexp
+            metric_names:
+              - .*
+      transform:
+        metric_statements:
+          - context: metric
+            statements:
+              - set(metric.name, "transformed_" + metric.name)
+    
+    exporters:
+      logging:
+        loglevel: debug
+      otlp:
+        endpoint: "tempo.observability:4317"
+        tls:
+          insecure: true
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        namespace: ""
+        const_labels:
+          exported: "true"
+      loki:
+        endpoint: "http://loki-loki.observability:3100/loki/api/v1/push"
+        tenant_id: "fake"
+        labels:
+          resource:
+            service.name: "service_name"
+            service.instance.id: "instance_id"
+    
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp, logging]
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: [batch, filter, transform]
+          exporters: [prometheus, logging]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [loki, logging]
