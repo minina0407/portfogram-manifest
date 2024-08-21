@@ -49,11 +49,6 @@ data:
           exported: "true"
       loki:
         endpoint: "http://loki-loki.observability:3100/loki/api/v1/push"
-        tenant_id: "fake"
-        labels:
-          resource:
-            service.name: "service_name"
-            service.instance.id: "instance_id"
     
     service:
       pipelines:
