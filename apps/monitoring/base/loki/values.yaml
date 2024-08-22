@@ -47,3 +47,5 @@ monitoring:
 
 test:
   enabled: false
+auth_enabled: false
+
