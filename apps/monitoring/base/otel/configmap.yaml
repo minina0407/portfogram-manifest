@@ -37,7 +37,7 @@ data:
         endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
         tls:
           insecure: true
-        format: json
+
     
     service:
       pipelines:
