@@ -39,9 +39,9 @@ data:
           exporter: false
           job: false
         labels:
-          resource:
-            service.name: "service_name"
-            host.name: "host_name"
+          attributes:
+            service.name: ""
+            host.name: ""
     
     
     service:
