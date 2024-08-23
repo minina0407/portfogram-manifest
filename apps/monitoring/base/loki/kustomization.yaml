@@ -4,7 +4,7 @@ helmCharts:
     releaseName: loki
     namespace: observability
     valuesFile: values.yaml
-    version: 6.10.0
+    version: 6.5.2
     includeCRDs: true
 
 helmGlobals:
