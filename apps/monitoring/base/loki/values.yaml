@@ -28,6 +28,3 @@ persistence:
   enabled: true
   size: 10Gi
   storageClassName: standard-rwo
-
-singleBinary:
-  replicas: 1
