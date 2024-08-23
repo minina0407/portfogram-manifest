@@ -41,6 +41,9 @@ loki:
       ruler:
         storage:
           type: local
+      memberlist:
+        join_members:
+          - loki-headless.observability.svc.cluster.local:7946
       query_range:
         results_cache:
           cache:
