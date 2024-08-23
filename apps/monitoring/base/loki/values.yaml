@@ -50,10 +50,6 @@ loki:
 singleBinary:
   replicas: 1
 
-serviceAccount:
-  create: true
-  name: loki
-  annotations: {}
 
 persistence:
   enabled: true
