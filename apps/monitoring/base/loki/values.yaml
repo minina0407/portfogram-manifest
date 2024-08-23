@@ -28,6 +28,8 @@ loki:
               prefix: index_
               period: 24h
       storage_config:
+        filesystem:
+          directory: /loki/chunks
         boltdb_shipper:
           active_index_directory: /loki/index
           cache_location: /loki/index_cache
@@ -67,26 +69,11 @@ singleBinary:
 persistence:
   enabled: true
   size: 10Gi
-  storageClassName: standard
+  storageClassName: standard-rwo
 
 gateway:
   enabled: false
 
-monitoring:
-  dashboards:
-    enabled: false
-  rules:
-    enabled: false
-  alerts:
-    enabled: false
-  serviceMonitor:
-    enabled: false
-  selfMonitoring:
-    enabled: false
-    grafanaAgent:
-      installOperator: false
-  lokiCanary:
-    enabled: false
 
 test:
   enabled: false
