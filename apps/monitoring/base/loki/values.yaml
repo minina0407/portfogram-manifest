@@ -28,3 +28,13 @@ persistence:
   enabled: true
   size: 10Gi
   storageClassName: standard-rwo
+# 다음 설정들을 명시적으로 비활성화
+backend:
+  enabled: false
+read:
+  enabled: false
+write:
+  enabled: false
+
+# 배포 모드를 명시적으로 지정
+deploymentStrategy: single-binary
