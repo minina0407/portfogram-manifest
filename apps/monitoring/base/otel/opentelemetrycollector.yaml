@@ -17,8 +17,9 @@ spec:
           - type: json_parser
           - type: regex_parser
             regex: '^(?P<time>\S+) (?P<stream>stdout|stderr) (?P<logtag>\w) (?P<log>.*)$'
-            timestamp:
-              parse_from: time
+            parse_time:
+              parse_from: attributes.time
+              layout_type: gotime
               layout: '2006-01-02T15:04:05.999999999Z'
       loki:
         protocols:
@@ -71,7 +72,6 @@ spec:
         loglevel: debug
       loki:
         endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
-        tenant_id: "tenant1"
         default_labels_enabled:
           exporter: true
           job: true
