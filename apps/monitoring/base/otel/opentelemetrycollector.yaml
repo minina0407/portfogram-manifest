@@ -3,6 +3,7 @@ kind: OpenTelemetryCollector
 metadata:
   name: log-collector
 spec:
+  serviceAccount: log-collector-collector
   image: otel/opentelemetry-collector-contrib:latest
   mode: deployment
   config: |
