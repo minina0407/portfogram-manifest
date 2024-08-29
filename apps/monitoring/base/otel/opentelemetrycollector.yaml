@@ -8,8 +8,8 @@ spec:
     receivers:
       otlp:
         protocols:
-          grpc:
-          http:
+          grpc: {}
+          http: {}
       filelog:
         include: [ /var/log/containers/*.log ]
         operators:
