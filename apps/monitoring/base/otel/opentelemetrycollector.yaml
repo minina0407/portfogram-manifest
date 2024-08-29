@@ -21,7 +21,9 @@ spec:
               layout: '%Y-%m-%dT%H:%M:%S.%LZ'
       loki:
         protocols:
-          http: {}
+          http:
+            endpoint: 0.0.0.0:3100
+
     
     processors:
       k8sattributes:
@@ -64,23 +66,34 @@ spec:
               - k8s.namespace.name
               - k8s.pod.name
               - service.name
-      batch: {}
       memory_limiter:
         check_interval: 5s
         limit_percentage: 80
         spike_limit_percentage: 25
+      batch: 
+        send_batch_size: 10000
+        timeout: 10s
     
     exporters:
       logging:
         loglevel: debug
       loki:
-        endpoint: "http://loki:3100/loki/api/v1/push"
+        endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
+        labels:
+          resource:
+            service.name: "service_name"
+            k8s.namespace.name: "k8s_namespace_name"
+            k8s.pod.name: "k8s_pod_name"
+          attributes:
+            log.file.name: "log_file_name"
+            k8s.container.name: "k8s_container_name"
     
     service:
       pipelines:
         logs:
           exporters:
           - loki
+          - logging
           processors:
           - k8sattributes
           - resource
