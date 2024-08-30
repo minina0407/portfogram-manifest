@@ -53,6 +53,13 @@ serviceAccount:
 podAnnotations: {}
 
 env:
+  # OpenTelemetry 관련 환경 변수 추가
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc.cluster.local:4317"
+  JAVA_TOOL_OPTIONS: >-
+    -javaagent:/opentelemetry-javaagent.jar
+    -Dotel.exporter.otlp.endpoint=$(OTEL_EXPORTER_OTLP_ENDPOINT)
+    -Dotel.resource.attributes=service.name=portfogram-server,$(OTEL_RESOURCE_ATTRIBUTES)
+
   KUBE_POD_NAME:
     valueFrom:
       fieldRef:
@@ -75,7 +82,9 @@ secret:
   name: database-credentials
 
 otel:
-  exporterOtlpEndpoint: http://tempo.tempo:4317
+  exporterOtlpEndpoint: http://otel-collector.observability.svc.cluster.local:4317
+
+
 
 # 공통 Ingress 설정
 ingress:
