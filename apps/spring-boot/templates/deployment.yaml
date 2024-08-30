@@ -34,25 +34,24 @@ spec:
             - name: http
               containerPort: {{ .Values.container.httpPort }}
               protocol: TCP
-            - name: http-management
+            - name: management
               containerPort: {{ .Values.container.managementPort }}
               protocol: TCP
-          {{- if .Values.probes.readiness.enabled }}
+
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.readiness.path }}
-              port: {{ .Values.container.managementPort }}
-          {{- end }}
-          {{- if .Values.probes.liveness.enabled }}
+              port: management
           livenessProbe:
             httpGet:
               path: {{ .Values.probes.liveness.path }}
-              port: {{ .Values.container.managementPort }}
-          {{- end }}
+              port: management
+            initialDelaySeconds: 60
+            periodSeconds: 10
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: {{ .Values.container.managementPort }}
+              port: management
             periodSeconds: {{ .Values.probes.startup.periodSeconds }}
             failureThreshold: {{ .Values.probes.startup.failureThreshold }}
           env:
