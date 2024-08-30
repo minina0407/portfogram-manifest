@@ -58,11 +58,3 @@ global:
 serviceMonitor:
   enabled: true
 
-config:
-  ruler:
-    storage:
-      type: local
-      local:
-        directory: /rules
-  limits_config:
-    max_concurrent_queries: 32
