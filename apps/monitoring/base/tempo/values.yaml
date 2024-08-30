@@ -38,10 +38,3 @@ config: |
       remote_write:
       - url: "http://prometheus-server:9090/api/v1/write"
         send_exemplars: true
-  receivers:
-    otlp:
-      protocols:
-        grpc:
-          endpoint: 0.0.0.0:4317
-        http:
-          endpoint: 0.0.0.0:4318
