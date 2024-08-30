@@ -25,15 +25,12 @@ spec:
               parse_from: attributes.time
               layout_type: gotime
               layout: '2006-01-02T15:04:05.999999999Z'
-    
       k8s_events:
         auth_type: serviceAccount
-    
       loki:
         protocols:
           http:
             endpoint: 0.0.0.0:3100
-    
       prometheus:
         config:
           scrape_configs:
@@ -43,7 +40,6 @@ spec:
               scrape_interval: 10s
               scheme: http
               honor_labels: true
-
     processors:
       k8sattributes:
         auth_type: serviceAccount
@@ -85,7 +81,6 @@ spec:
       batch: 
         send_batch_size: 10000
         timeout: 10s
-
     exporters:
       logging:
         loglevel: debug
@@ -98,12 +93,10 @@ spec:
         default_labels_enabled:
           exporter: true
           job: true
-    
       prometheusremotewrite:
         endpoint: "http://prometheus-server.observability.svc.cluster.local:9090/api/v1/write"
         resource_to_telemetry_conversion:
           enabled: true
-
     service:
       pipelines:
         traces:
@@ -114,12 +107,10 @@ spec:
           receivers: [loki, filelog]
           processors: [k8sattributes, resource, memory_limiter, batch]
           exporters: [loki, logging]
-    
         metrics:
           receivers: [otlp, prometheus]
-          processors: [ k8sattributes, memory_limiter, batch]
+          processors: [k8sattributes, memory_limiter, batch]
           exporters: [prometheusremotewrite, logging]
-
   ports:
     - name: metrics
       port: 8888
