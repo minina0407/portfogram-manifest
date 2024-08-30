@@ -14,12 +14,10 @@ data:
           maxLines: 1000
           derivedFields:
             - datasourceUid: tempo
-              matcherRegex: '"traceID":"(\w+)"'
+              matcherRegex: 'traceID=(\\w+)'
               name: TraceID
               url: ${__value.raw}
-              urlDisplayLabel: Trace
-        secureJsonData:
-          httpHeaderValue1: '1'
+              urlDisplayLabel: View Trace in Tempo
       - name: Prometheus
         type: prometheus
         uid: prometheus
@@ -34,17 +32,18 @@ data:
         uid: tempo
         url: http://tempo:3100
         jsonData:
+          httpMethod: GET
           tracesToLogs:
             datasourceUid: loki
-            tags: [app]
-            spanEndTimeShift: 1h
-            spanStartTimeShift: -1h
-            filterByTraceID: true
+            spanStartTimeShift: "1h"
+            spanEndTimeShift: "1h"
+            tags: ['instance', 'job', 'namespace', 'pod']
+            filterByTraceID: false
             filterBySpanID: false
             lokiSearch: true
-          serviceMap:
-            datasourceUid: prometheus
           search:
             hide: false
           nodeGraph:
+            enabled: true
+          lokiSearch:
             enabled: true
