@@ -79,10 +79,20 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OTEL_RESOURCE_ATTRIBUTES
-              value: "pod=$(KUBE_POD_NAME),namespace={{ .Release.Namespace }}"
+              value: "pod=$(KUBE_POD_NAME),namespace={{ .Release.Namespace }},service.name={{ include "app.name" . }}"
             - name: OTEL_METRICS_EXPORTER
               value: "otlp"
             - name: OTEL_TRACES_EXPORTER
               value: "otlp"
             - name: OTEL_LOGS_EXPORTER
               value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "http/protobuf"
+            - name: OTEL_JAVAAGENT_DEBUG
+              value: "true"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/app/opentelemetry-javaagent.jar"
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "5"
