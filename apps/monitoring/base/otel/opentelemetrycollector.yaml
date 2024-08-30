@@ -86,7 +86,7 @@ spec:
         timeout: 10s
 
     exporters:
-      logging:
+     logging:
         loglevel: debug
       otlp/tempo:
         endpoint: tempo.observability.svc.cluster.local:4317
@@ -105,6 +105,10 @@ spec:
 
     service:
       pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [k8sattributes, memory_limiter, batch]
+          exporters: [otlp/tempo, logging]
         logs:
           receivers: [loki, filelog]
           processors: [k8sattributes, resource, memory_limiter, batch]
