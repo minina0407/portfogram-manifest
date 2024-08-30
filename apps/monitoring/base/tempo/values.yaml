@@ -15,7 +15,6 @@ config: |
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
-  ingester: {}
   server:
     http_listen_port: 3100
   storage:
@@ -26,7 +25,11 @@ config: |
       wal:
         path: /var/tempo/wal
   querier: {}
-  query_frontend: {}
+  query_frontend:
+    search:
+      max_duration: 0
+  ingester:
+    max_block_duration: 5m
   overrides:
     per_tenant_override_config: /conf/overrides.yaml
     metrics_generator_processors:
