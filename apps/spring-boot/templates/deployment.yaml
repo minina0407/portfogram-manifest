@@ -91,7 +91,7 @@ spec:
             - name: OTEL_JAVAAGENT_DEBUG
               value: "true"
             - name: JAVA_TOOL_OPTIONS
-              value: "-javaagent:/app/opentelemetry-javaagent.jar"
+              value: "-javaagent:/opentelemetry-javaagent.jar"
       dnsConfig:
         options:
           - name: ndots
