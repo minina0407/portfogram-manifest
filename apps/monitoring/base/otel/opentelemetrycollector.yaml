@@ -1,7 +1,8 @@
-apiVersion: opentelemetry.io/v1alpha1
+apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: otel-collector
+  namespace: observability
 spec:
   serviceAccount: otel-collector
   image: otel/opentelemetry-collector-contrib:latest
@@ -86,7 +87,7 @@ spec:
         timeout: 10s
 
     exporters:
-     logging:
+      logging:
         loglevel: debug
       otlp/tempo:
         endpoint: tempo.observability.svc.cluster.local:4317
@@ -99,7 +100,7 @@ spec:
           job: true
     
       prometheusremotewrite:
-        endpoint: "http://prometheus-server:9090/api/v1/write"
+        endpoint: "http://prometheus-server.observability.svc.cluster.local:9090/api/v1/write"
         resource_to_telemetry_conversion:
           enabled: true
 
@@ -121,8 +122,8 @@ spec:
 
   ports:
     - name: metrics
-      protocol: TCP
       port: 8888
+      targetPort: 8888
     - name: otlp-grpc
       port: 4317
       targetPort: 4317
