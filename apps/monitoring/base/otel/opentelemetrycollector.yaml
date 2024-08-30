@@ -1,8 +1,7 @@
-apiVersion: opentelemetry.io/v1beta1
+apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: otel-collector
-  namespace: observability
 spec:
   serviceAccount: otel-collector
   image: otel/opentelemetry-collector-contrib:latest
@@ -25,12 +24,15 @@ spec:
               parse_from: attributes.time
               layout_type: gotime
               layout: '2006-01-02T15:04:05.999999999Z'
+    
       k8s_events:
         auth_type: serviceAccount
+    
       loki:
         protocols:
           http:
             endpoint: 0.0.0.0:3100
+    
       prometheus:
         config:
           scrape_configs:
@@ -40,6 +42,7 @@ spec:
               scrape_interval: 10s
               scheme: http
               honor_labels: true
+
     processors:
       k8sattributes:
         auth_type: serviceAccount
@@ -81,22 +84,25 @@ spec:
       batch: 
         send_batch_size: 10000
         timeout: 10s
+
     exporters:
       logging:
         loglevel: debug
       otlp/tempo:
         endpoint: tempo.observability.svc.cluster.local:4317
         tls:
-         insecure: true
+          insecure: true
       loki:
         endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
         default_labels_enabled:
           exporter: true
           job: true
+    
       prometheusremotewrite:
-        endpoint: "http://prometheus-server.observability.svc.cluster.local:9090/api/v1/write"
+        endpoint: "http://prometheus-server:9090/api/v1/write"
         resource_to_telemetry_conversion:
           enabled: true
+
     service:
       pipelines:
         traces:
@@ -107,14 +113,16 @@ spec:
           receivers: [loki, filelog]
           processors: [k8sattributes, resource, memory_limiter, batch]
           exporters: [loki, logging]
+    
         metrics:
           receivers: [otlp, prometheus]
-          processors: [k8sattributes, memory_limiter, batch]
+          processors: [ k8sattributes, memory_limiter, batch]
           exporters: [prometheusremotewrite, logging]
+
   ports:
     - name: metrics
+      protocol: TCP
       port: 8888
-      targetPort: 8888
     - name: otlp-grpc
       port: 4317
       targetPort: 4317
