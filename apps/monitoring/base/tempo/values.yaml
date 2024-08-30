@@ -33,6 +33,9 @@ config: |
     - 'service-graphs'
     - 'span-metrics'
   metrics_generator:
+    registry:
+      external_labels:
+        source: tempo 
     storage:
       path: "/tmp/tempo"
       remote_write:

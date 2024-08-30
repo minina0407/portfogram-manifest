@@ -88,6 +88,10 @@ spec:
     exporters:
       logging:
         loglevel: debug
+      otlp/tempo:
+        endpoint: tempo.observability.svc.cluster.local:4317
+        tls:
+         insecure: true
       loki:
         endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
         default_labels_enabled:

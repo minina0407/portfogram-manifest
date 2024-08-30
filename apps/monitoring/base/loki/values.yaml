@@ -5,6 +5,15 @@ loki:
     ring:
       kvstore:
         store: inmemory
+  tracing:
+    enabled: true
+    otlp:
+      endpoint: tempo.observability.svc.cluster.local:4317
+      insecure: true
+  derived_fields:
+    - name: traceID
+      matcher: 'traceID=(\w+)'
+      source: message
   storage:
     type: filesystem
   storageConfig:
@@ -45,3 +54,15 @@ persistence:
 # Set deployment mode to single binary
 global:
   deploymentMode: "SingleBinary"
+
+serviceMonitor:
+  enabled: true
+
+config:
+  ruler:
+    storage:
+      type: local
+      local:
+        directory: /rules
+  limits_config:
+    max_concurrent_queries: 32
