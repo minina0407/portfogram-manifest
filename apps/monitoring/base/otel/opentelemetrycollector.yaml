@@ -14,24 +14,14 @@ spec:
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
-      filelog:
-        include: [ /var/log/containers/*.log ]
-        operators:
-          - type: json_parser
-          - type: regex_parser
-            regex: '^(?P<time>\S+) (?P<stream>stdout|stderr) (?P<logtag>\w) (?P<log>.*)$'
-            parse_time:
-              parse_from: attributes.time
-              layout_type: gotime
-              layout: '2006-01-02T15:04:05.999999999Z'
-    
-      k8s_events:
-        auth_type: serviceAccount
-    
+
       loki:
         protocols:
           http:
             endpoint: 0.0.0.0:3100
+    
+      k8s_events:
+        auth_type: serviceAccount
     
       prometheus:
         config:
@@ -63,6 +53,24 @@ spec:
               name: k8s.pod.name
             - from: resource_attributes
               name: k8s.namespace.name
+    
+      metricstransform:
+        transforms:
+          - include: .*
+            match_type: regexp
+            action: update
+            new_name: app.${1}
+      filter:
+        metrics:
+          include:
+            match_type: regexp
+            metric_names:
+              - app\..*
+          exclude:
+            match_type: regexp
+            metric_names:
+              - app\.internal\..*
+    
       resource:
         attributes:
           - action: insert
@@ -77,10 +85,7 @@ spec:
           - action: insert
             key: service.name
             from_attribute: k8s.statefulset.name
-      memory_limiter:
-        check_interval: 5s
-        limit_percentage: 80
-        spike_limit_percentage: 25
+
       batch: 
         send_batch_size: 10000
         timeout: 10s
@@ -118,6 +123,12 @@ spec:
           receivers: [otlp, prometheus]
           processors: [ k8sattributes, memory_limiter, batch]
           exporters: [prometheusremotewrite, logging]
+    
+    telemetry:
+      metrics:
+        address: 0.0.0.0:8888
+      debug_pprof:
+        endpoint: 0.0.0.0:1777
 
   ports:
     - name: metrics
