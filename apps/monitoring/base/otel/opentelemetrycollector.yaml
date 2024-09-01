@@ -14,7 +14,6 @@ spec:
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
-
       loki:
         protocols:
           http:
@@ -56,7 +55,7 @@ spec:
     
       metricstransform:
         transforms:
-          - include: (.*)
+          - include: ^(?!otelcol_)(.*)
             match_type: regexp
             action: update
             new_name: app.$1
@@ -66,6 +65,7 @@ spec:
             match_type: regexp
             metric_names:
               - app\..*
+              - otelcol_.*
           exclude:
             match_type: regexp
             metric_names:
@@ -85,7 +85,12 @@ spec:
           - action: insert
             key: service.name
             from_attribute: k8s.statefulset.name
-
+    
+      memory_limiter:
+        check_interval: 5s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+    
       batch: 
         send_batch_size: 10000
         timeout: 10s
@@ -112,18 +117,17 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [k8sattributes,  batch]
+          processors: [k8sattributes, memory_limiter, batch]
           exporters: [otlp/tempo, logging]
         logs:
-          receivers: [loki]
-          processors: [k8sattributes, resource, batch]
+          receivers: [loki ] 
+          processors: [k8sattributes, resource, memory_limiter, batch]
           exporters: [loki, logging]
     
         metrics:
           receivers: [otlp, prometheus]
-          processors: [ k8sattributes,  batch]
+          processors: [ k8sattributes, memory_limiter, batch]
           exporters: [prometheusremotewrite, logging]
-    
 
   ports:
     - name: metrics
