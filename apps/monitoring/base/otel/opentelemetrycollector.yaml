@@ -124,11 +124,6 @@ spec:
           processors: [ k8sattributes,  batch]
           exporters: [prometheusremotewrite, logging]
     
-    telemetry:
-      metrics:
-        address: 0.0.0.0:8888
-      debug_pprof:
-        endpoint: 0.0.0.0:1777
 
   ports:
     - name: metrics
@@ -140,6 +135,3 @@ spec:
     - name: otlp-http
       port: 4318
       targetPort: 4318
-    - name: pprof
-      port: 1777
-      targetPort: 1777
