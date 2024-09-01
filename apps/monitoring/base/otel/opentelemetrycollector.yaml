@@ -56,10 +56,10 @@ spec:
     
       metricstransform:
         transforms:
-          - include: .*
+          - include: (.*)
             match_type: regexp
             action: update
-            new_name: app.${1}
+            new_name: app.$1
       filter:
         metrics:
           include:
