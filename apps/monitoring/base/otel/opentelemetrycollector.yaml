@@ -140,3 +140,6 @@ spec:
     - name: otlp-http
       port: 4318
       targetPort: 4318
+    - name: pprof
+      port: 1777
+      targetPort: 1777
