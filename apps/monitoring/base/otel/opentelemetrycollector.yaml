@@ -111,15 +111,7 @@ spec:
           receivers: [otlp, prometheus]
           processors: [memory_limiter, k8sattributes,  batch]
           exporters: [prometheusremotewrite, logging]
-    
-    telemetry:
-       logs:
-          level: "info"
-          development: false
-          encoding: "json"
-       metrics:
-          level: "detailed"
-          address: "0.0.0.0:8888"
+
 
   ports:
     - name: metrics
