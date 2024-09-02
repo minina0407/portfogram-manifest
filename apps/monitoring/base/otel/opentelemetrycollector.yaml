@@ -100,16 +100,16 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors:  [memory_limiter, k8sattributes, batch]
+          processors: [k8sattributes, memory_limiter, batch]
           exporters: [otlp/tempo, logging]
         logs:
           receivers: [otlp, loki  ] 
-          processors:[memory_limiter, k8sattributes, resource, batch]
+          processors: [k8sattributes, resource, memory_limiter, batch]
           exporters: [loki, logging]
     
         metrics:
           receivers: [otlp, prometheus]
-          processors: [memory_limiter, k8sattributes,  batch]
+          processors: [ k8sattributes, memory_limiter, batch]
           exporters: [prometheusremotewrite, logging]
 
 
