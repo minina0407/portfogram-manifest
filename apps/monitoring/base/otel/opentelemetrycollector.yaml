@@ -26,13 +26,20 @@ spec:
         config:
           scrape_configs:
             - job_name: 'otel-collector'
-              static_configs:
-                - targets: ['${POD_IP}:8888']
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: otel-collector
+                - source_labels: [__meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: metrics
               scrape_interval: 10s
               metrics_path: /metrics
               scheme: http
               honor_labels: true
-
+    
     processors:
       k8sattributes:
         auth_type: serviceAccount
