@@ -2,6 +2,9 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: otel-collector
+  labels:
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/component: opentelemetry-collector
 spec:
   serviceAccount: otel-collector
   image: otel/opentelemetry-collector-contrib:latest
@@ -32,6 +35,11 @@ spec:
                 - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
                   action: keep
                   regex: otel-collector
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+                  action: keep
+                  regex: opentelemetry-collector
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
                 - source_labels: [__meta_kubernetes_pod_container_port_name]
                   action: keep
                   regex: metrics
