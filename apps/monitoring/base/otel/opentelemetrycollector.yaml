@@ -27,8 +27,9 @@ spec:
           scrape_configs:
             - job_name: 'otel-collector'
               static_configs:
-                - targets: ['localhost:8888']
+                - targets: ['${POD_IP}:8888']
               scrape_interval: 10s
+              metrics_path: /metrics
               scheme: http
               honor_labels: true
 
@@ -52,24 +53,6 @@ spec:
               name: k8s.pod.name
             - from: resource_attributes
               name: k8s.namespace.name
-    
-      metricstransform:
-        transforms:
-          - include: ^(?!otelcol_)(.*)
-            match_type: regexp
-            action: update
-            new_name: app.$1
-      filter:
-        metrics:
-          include:
-            match_type: regexp
-            metric_names:
-              - app\..*
-              - otelcol_.*
-          exclude:
-            match_type: regexp
-            metric_names:
-              - app\.internal\..*
     
       resource:
         attributes:
@@ -114,19 +97,25 @@ spec:
           enabled: true
 
     service:
+      telemetry:
+        logs:
+          level: info
+        metrics:
+          level: detailed
+          address: 0.0.0.0:8888
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [k8sattributes, memory_limiter, batch]
+          processors:  [memory_limiter, k8sattributes, batch]
           exporters: [otlp/tempo, logging]
         logs:
           receivers: [otlp, loki  ] 
-          processors: [k8sattributes, resource, memory_limiter, batch]
+          processors:[memory_limiter, k8sattributes, resource, batch]
           exporters: [loki, logging]
     
         metrics:
           receivers: [otlp, prometheus]
-          processors: [ k8sattributes, memory_limiter, batch]
+          processors: [memory_limiter, k8sattributes,  batch]
           exporters: [prometheusremotewrite, logging]
 
   ports:
