@@ -105,7 +105,7 @@ spec:
             log_statements:
              - context: log
                statements:
-                 - set(time_unix_nano, truncate(time_unix_nano, 1000000000))
+                 - set(attributes["custom.timestamp"], ConvertCase(ToString(Truncate(ToFloat(time_unix_nano) / 1e9, 0)), "lower"))
     
       resource:
         attributes:
@@ -161,11 +161,11 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [k8sattributes, memory_limiter, batch,transform]
+          processors: [k8sattributes, memory_limiter, batch]
           exporters: [otlp/tempo, logging]
         logs:
           receivers: [otlp, loki  ] 
-          processors: [k8sattributes, resource, memory_limiter, batch]
+          processors: [k8sattributes,transform, resource, memory_limiter, batch]
           exporters: [loki, logging]
       
         metrics:
