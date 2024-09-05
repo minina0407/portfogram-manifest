@@ -105,7 +105,7 @@ spec:
             log_statements:
              - context: log
                statements:
-                - set(timestamp, Unix(truncate(Unix(timestamp), 1))) 
+                 - set(body.timestamp, Unix(truncate(Unix(body.timestamp), 1)))
     
       resource:
         attributes:
