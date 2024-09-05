@@ -102,10 +102,10 @@ spec:
               - action: aggregate_labels
                 label_set: [""]
       transform:
-            log_statements:
-             - context: log
-               statements:
-                  - set(time_unix_nano, Truncate(time_unix_nano, 1000000000))
+        log_statements:
+          - context: log
+            statements:
+              - set(time_unix_nano, (time_unix_nano / 1000000000) * 1000000000)
       resource:
         attributes:
           - action: insert
