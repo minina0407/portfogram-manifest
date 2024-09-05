@@ -27,7 +27,7 @@ spec:
     
       prometheus:
         config:
-          scrape_configs:
+          scrape_configs:xx
             - job_name: 'otel-collector'
               kubernetes_sd_configs:
                 - role: pod
@@ -87,6 +87,25 @@ spec:
               name: k8s.pod.name
             - from: resource_attributes
               name: k8s.namespace.name
+      metricstransform:
+        transforms:
+          - include: .*
+            match_type: regexp
+            action: update
+            new_name: ${1}
+            operations:
+              - action: update_label
+                label: otel_scope_name
+                new_label: job
+              - action: aggregate_labels
+                label_set: [job]
+              - action: aggregate_labels
+                label_set: [""]
+      transform:
+            log_statements:
+             - context: log
+               statements:
+                - set(timestamp, Unix(truncate(Unix(timestamp), 1))) 
     
       resource:
         attributes:
@@ -142,16 +161,16 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [k8sattributes, memory_limiter, batch]
+          processors: [k8sattributes, memory_limiter, batch,transform]
           exporters: [otlp/tempo, logging]
         logs:
           receivers: [otlp, loki  ] 
           processors: [k8sattributes, resource, memory_limiter, batch]
           exporters: [loki, logging]
-    
+      
         metrics:
           receivers: [otlp, prometheus]
-          processors: [ k8sattributes, memory_limiter, batch]
+          processors: [ k8sattributes, memory_limiter,metricstransform, batch]
           exporters: [prometheusremotewrite, logging]
 
 
