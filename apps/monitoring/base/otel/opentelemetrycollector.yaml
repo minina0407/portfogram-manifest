@@ -105,8 +105,7 @@ spec:
             log_statements:
              - context: log
                statements:
-                 - set(attributes["custom.timestamp"], ConvertCase(ToString(Truncate(ToFloat(time_unix_nano) / 1e9, 0)), "lower"))
-    
+                  - set(time_unix_nano, Truncate(time_unix_nano, 1000000000))
       resource:
         attributes:
           - action: insert
