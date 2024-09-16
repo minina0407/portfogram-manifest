@@ -14,7 +14,7 @@ data:
         
       
         route:
-          receiver: 'slack-notifications'
+          receiver: 'slack-warnings'
           group_by: ['alertname', 'cluster', 'service', 'severity','instance']
           group_wait: 30s
           group_interval: 5m
