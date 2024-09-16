@@ -76,13 +76,61 @@ extraScrapeConfigs: |
 serverFiles:
   alerting_rules.yml:
     groups:
-      - name: example
-        rules:
-          - alert: HighRequestLatency
-            expr: http_request_duration_seconds{quantile="0.5"} > 1
-            for: 10m
-            labels:
-              severity: warning
-            annotations:
-              summary: "High request latency on {{ $labels.instance }}"
-              description: "{{ $labels.instance }} has a median request latency above 1s (current value: {{ $value }}s)"
+        - name: use_method_alerts
+          rules:
+            # Utilization 알림
+            - alert: HighCPUUtilization
+              expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "High CPU utilization on {{ $labels.instance }}"
+                description: "CPU utilization is above 80% for 5 minutes"
+
+            - alert: HighMemoryUtilization
+              expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "High memory utilization on {{ $labels.instance }}"
+                description: "Memory utilization is above 90% for 5 minutes"
+
+            # Saturation 알림
+            - alert: HighDiskSaturation
+              expr: node_filesystem_files_free{mountpoint="/"} / node_filesystem_files{mountpoint="/"} * 100 < 10
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "High disk saturation on {{ $labels.instance }}"
+                description: "Less than 10% free inodes on root filesystem for 5 minutes"
+
+            - alert: HighLoadAverage
+              expr: node_load1 > on(instance) 2 * count by(instance) (node_cpu_seconds_total{mode="idle"})
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "High load average on {{ $labels.instance }}"
+                description: "1 minute load average is more than twice the number of CPUs for 5 minutes"
+
+            # Errors 알림
+            - alert: HighErrorRate
+              expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: "High HTTP error rate"
+                description: "HTTP error rate is above 5% for 5 minutes"
+
+            - alert: KubernetesPodCrashLooping
+              expr: kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m > 5
+              for: 15m
+              labels:
+                severity: critical
+              annotations:
+                summary: "Kubernetes pod crash looping"
+                description: "Pod {{ $labels.pod }} is crash looping"
