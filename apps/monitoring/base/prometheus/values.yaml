@@ -3,9 +3,9 @@
 # These components do not make sense in a local dev environment
 # and can be disabled.
 alertmanager:
-  enabled: false
+  enabled: true
 kube-state-metrics:
-  enabled: false
+  enabled: true
 prometheus-node-exporter:
   enabled: false
 prometheus-pushgateway:
