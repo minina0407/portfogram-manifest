@@ -11,19 +11,23 @@ data:
         global:
           slack_api_url: 'https://hooks.slack.com/services/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'
           resolve_timeout: 5m
+        
+      
         route:
+          receiver: 'slack-notifications'
           group_by: ['alertname', 'cluster', 'service']
           group_wait: 30s
           group_interval: 5m
           repeat_interval: 4h
-        receivers: 
-        - name: 'slack-notifications'
-          slack_configs:
-            - channel: '#alerts'
-              send_resolved: true
-              icon_emoji: ':warning:'
-              title: "{{ .GroupLabels.alertname }} - {{ .Status | toUpper }}"
-              text: |
+        
+        receivers:
+          - name: 'slack-notifications'
+            slack_configs:
+              - channel: '#alerts'
+                send_resolved: true
+                icon_emoji: ':warning:'
+                title: "{{ .GroupLabels.alertname }} - {{ .Status | toUpper }}"
+                text: |
                   {{ range .Alerts }}
                   *Alert:* {{ .Annotations.summary }}
                   *Description:* {{ .Annotations.description }}
@@ -31,4 +35,5 @@ data:
                   *Cluster:* {{ .Labels.cluster }}
                   *Service:* {{ .Labels.service }}
                   {{ end }}
-              
+        
+
