@@ -96,7 +96,7 @@ data:
     rule_files:
         - /etc/prometheus/alert_rules.yml
     
-    alert_rules.yml: |
+  alert_rules.yml: |
       groups:
         - name: use_method_alerts
           rules:
