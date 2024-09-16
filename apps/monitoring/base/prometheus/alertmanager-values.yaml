@@ -19,7 +19,7 @@ config:
   receivers:
     - name: 'slack-notifications'
       slack_configs:
-          - api_url: 'https://hooks.slack.com/services/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'
+          - api_url: 'https://hooks.slack.com/services/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'
             channel: '#alerts'
             send_resolved: true
     - name: 'slack-critical'
