@@ -20,3 +20,8 @@ helmCharts:
 
 helmGlobals:
   chartHome: charts
+
+configMapGenerator:
+      - name: prometheus-rules
+        files:
+          - rules.yml

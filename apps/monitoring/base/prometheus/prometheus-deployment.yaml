@@ -26,11 +26,16 @@ spec:
             - "--storage.tsdb.max-block-duration=2h"
           ports:
             - containerPort: 9090
+
           volumeMounts:
             - name: prometheus-storage
               mountPath: /prometheus
             - name: prometheus-config
               mountPath: /etc/prometheus
+            - name: prometheus-rules
+              mountPath: /etc/prometheus/rules.yml
+              subPath: rules.yml
+
         - name: thanos-sidecar
           image: quay.io/thanos/thanos:v0.31.0
           args:
@@ -57,3 +62,6 @@ spec:
             items:
               - key: objstore.yaml
                 path: objstore.yaml
+        - name: prometheus-rules
+          configMap:
+            name: prometheus-rules
