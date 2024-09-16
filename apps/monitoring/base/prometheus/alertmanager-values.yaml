@@ -1,0 +1,19 @@
+config:
+  global:
+    resolve_timeout: 5m
+  route:
+    group_by: ['alertname', 'job']
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 12h
+    receiver: 'slack-notifications'
+    routes:
+      - match:
+          severity: critical
+        receiver: 'slack-notifications'
+  receivers:
+    - name: 'slack-notifications'
+      slack_configs:
+        - api_url: 'https://hooks.slack.com/services/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'
+          channel: '#alerts-warnings'
+          send_resolved: true

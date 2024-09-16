@@ -3,32 +3,32 @@
 # These components do not make sense in a local dev environment
 # and can be disabled.
 alertmanager:
-  enabled: true
-  config:
-    global:
-      resolve_timeout: 5m
-    route:
-      group_by: ['alertname', 'job']
-      group_wait: 30s
-      group_interval: 5m
-      repeat_interval: 12h
-      receiver: 'slack-notifications'
-      routes:
-        - match:
-            severity: critical
-          receiver: 'slack-notifications'
-    receivers:
-      - name: 'slack-notifications'
-        slack_configs:
-          - api_url: 'https://hooks.slack.com/services/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'
-            channel: '#alerts-warnings'
-            send_resolved: true
+  enabled: false
 kube-state-metrics:
   enabled: true
 prometheus-node-exporter:
   enabled: false
 prometheus-pushgateway:
   enabled: false
+
+# Alertmanager 연결 설정
+alertmanagerFiles:
+  alertmanager.yml:
+    global: {}
+    receivers: []
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'null'
+    inhibit_rules: []
+
+# 외부 Alertmanager 참조 설정
+alertmanagers:
+  - static_configs:
+      - targets:
+          - alertmanager.observability.svc.cluster.local:9093
 
 server:
   extraFlags:
@@ -39,10 +39,7 @@ server:
   persistentVolume:
     # Give Prometheus more space to store metrics.
     size: 20Gi
-  alertmanagers:
-    - static_configs:
-        - targets:
-            - alertmanager.observability.svc.cluster.local:9093
+
 # Scrape metrics from deployed providers
 extraScrapeConfigs: |
   - job_name: 'capi-providers'
