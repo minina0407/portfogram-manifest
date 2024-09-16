@@ -11,42 +11,43 @@ config:
     routes:
       - match:
           severity: critical
-          receiver: 'slack-critical'
+        receiver: 'slack-critical'
       - match:
           severity: warning
-          receiver: 'slack-warnings'
-    receivers:
-      - name: 'slack-critical'
-        slack_configs:
-          - channel: '#alerts-critical'
-            send_resolved: true
-            icon_emoji: ':red_circle:'
-            title: "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}"
-            text: |
-              *Alert:* {{ .GroupLabels.alertname }}
-              *Severity:* {{ .CommonLabels.severity }}
-              *Instance:* {{ .GroupLabels.instance }}
-              
-              *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-              *Description:* {{ (index .Alerts 0).Annotations.description }}
-              
-              {{ if gt (len .Alerts) 1 }}
-              *Additional Alerts:*
-              {{ range $index, $alert := (slice .Alerts 1) }}
-              {{ $index | add1 }}. {{ $alert.Annotations.summary }}
-              {{ end }}
-              {{ end }}
+        receiver: 'slack-warnings'
 
-      - name: 'slack-warnings'
-        slack_configs:
-          - channel: '#alerts-warnings'
-            send_resolved: true
-            icon_emoji: ':warning:'
-            title: "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}"
-            text: |
-              *Alert:* {{ .GroupLabels.alertname }}
-              *Severity:* {{ .CommonLabels.severity }}
-              *Instance:* {{ .GroupLabels.instance }}
-              
-              *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-              *Description:* {{ (index .Alerts 0).Annotations.description }}
+  receivers:
+    - name: 'slack-critical'
+      slack_configs:
+        - channel: '#alerts-critical'
+          send_resolved: true
+          icon_emoji: ':red_circle:'
+          title: "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}"
+          text: |
+            *Alert:* {{ .GroupLabels.alertname }}
+            *Severity:* {{ .CommonLabels.severity }}
+            *Instance:* {{ .GroupLabels.instance }}
+            
+            *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+            *Description:* {{ (index .Alerts 0).Annotations.description }}
+            
+            {{ if gt (len .Alerts) 1 }}
+            *Additional Alerts:*
+            {{ range $index, $alert := (slice .Alerts 1) }}
+            {{ $index | add1 }}. {{ $alert.Annotations.summary }}
+            {{ end }}
+            {{ end }}
+
+    - name: 'slack-warnings'
+      slack_configs:
+        - channel: '#alerts-warnings'
+          send_resolved: true
+          icon_emoji: ':warning:'
+          title: "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}"
+          text: |
+            *Alert:* {{ .GroupLabels.alertname }}
+            *Severity:* {{ .CommonLabels.severity }}
+            *Instance:* {{ .GroupLabels.instance }}
+            
+            *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+            *Description:* {{ (index .Alerts 0).Annotations.description }}
