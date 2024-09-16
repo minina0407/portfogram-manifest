@@ -87,3 +87,24 @@ data:
             regex: ^otel_otel_otel_(.+)
             target_label: __name__
             replacement: ${1}
+            
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets: ['alertmanager:9093']
+          
+    rule_files:
+        - /etc/prometheus/alert_rules.yml
+    
+    alert_rules.yml: |
+      groups:
+        - name: example
+          rules:
+            - alert: HighErrorRate
+              expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: "High error rate detected"
+                description: "Error rate is above 10% for the last 5 minutes"

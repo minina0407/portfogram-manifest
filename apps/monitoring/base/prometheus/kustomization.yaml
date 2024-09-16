@@ -6,6 +6,9 @@ resources:
   - prometheus-service-monitor.yaml
   - thanos-sidecar-configmap.yaml
   - prometheus-configmap.yaml
+  - alertmanager-configmap.yaml
+  - alertmanager-service.yaml
+  - alertmanager-deployment.yaml
 
 helmCharts:
   - name: prometheus
