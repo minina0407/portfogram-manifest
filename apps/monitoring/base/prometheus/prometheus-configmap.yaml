@@ -91,7 +91,7 @@ data:
     alerting:
       alertmanagers:
       - static_configs:
-        - targets: ['alertmanager:9093']
+        - targets: ['alertmanager.observability:9093']
           
     rule_files:
         - /etc/prometheus/alert_rules.yml
