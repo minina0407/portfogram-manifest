@@ -32,9 +32,7 @@ spec:
               mountPath: /prometheus
             - name: prometheus-config
               mountPath: /etc/prometheus
-            - name: prometheus-rules
-              mountPath: /etc/prometheus/rules.yml
-              subPath: rules.yml
+
 
         - name: thanos-sidecar
           image: quay.io/thanos/thanos:v0.31.0
@@ -62,6 +60,3 @@ spec:
             items:
               - key: objstore.yaml
                 path: objstore.yaml
-        - name: prometheus-rules
-          configMap:
-            name: prometheus-rules
