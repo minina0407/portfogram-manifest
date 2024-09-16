@@ -15,25 +15,50 @@ data:
       
         route:
           receiver: 'slack-notifications'
-          group_by: ['alertname', 'cluster', 'service']
+          group_by: ['alertname', 'cluster', 'service', 'severity','instance']
           group_wait: 30s
           group_interval: 5m
           repeat_interval: 4h
+          routes:
+          - match:
+              severity: critical
+            receiver: 'slack-criticals'
+          - match:
+               severity: warning
+            receiver: 'slack-warnings'
         
         receivers:
-          - name: 'slack-notifications'
+          - name: 'slack-criticals'
             slack_configs:
-              - channel: '#alerts'
+              - channel: '#alerts-critical'
                 send_resolved: true
-                icon_emoji: ':warning:'
+                icon_emoji: ':fire:'
                 title: "{{ .GroupLabels.alertname }} - {{ .Status | toUpper }}"
                 text: |
-                  {{ range .Alerts }}
-                  *Alert:* {{ .Annotations.summary }}
-                  *Description:* {{ .Annotations.description }}
-                  *Severity:* {{ .Labels.severity }}
-                  *Cluster:* {{ .Labels.cluster }}
-                  *Service:* {{ .Labels.service }}
+                  *Alert:* {{ .GroupLabels.alertname }}
+                  *Severity:* {{ .CommonLabels.severity }}
+                  *Instance:* {{ .GroupLabels.instance }}
+                  
+                  *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+                  *Description:* {{ (index .Alerts 0).Annotations.description }}
+                  
+                  {{ if gt (len .Alerts) 1 }}
+                  *Additional Alerts:*
+                  {{ range $index, $alert := (slice .Alerts 1) }}
+                  {{ $index | add1 }}. {{ $alert.Annotations.summary }}
                   {{ end }}
-        
-
+                  {{ end }}
+          - name: 'slack-warnings'
+            slack_configs:
+              - channel: '#alerts-warnings'
+                send_resolved: true
+                icon_emoji: ':warning:'
+                title: "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}"
+                text: |
+                  *Alert:* {{ .GroupLabels.alertname }}
+                  *Severity:* {{ .CommonLabels.severity }}
+                  *Instance:* {{ .GroupLabels.instance }}
+                  
+                  *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+                  *Description:* {{ (index .Alerts 0).Annotations.description }}
+                  
