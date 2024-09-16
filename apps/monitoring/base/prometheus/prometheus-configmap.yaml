@@ -90,16 +90,14 @@ data:
             
     alerting:
       alertmanagers:
-       - api_version: v2
-         scheme: http
        - static_configs:
          - targets: 
             -"alertmanager.observability:9093"
           
     rule_files:
-        - /etc/prometheus/alert_rules.yml
+        - /etc/prometheus/rules/*.yml
     
-  alert_rules.yml: |
+  alert.rules.yml: |
       groups:
         - name: use_method_alerts
           rules:
