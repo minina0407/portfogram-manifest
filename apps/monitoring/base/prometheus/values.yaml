@@ -4,6 +4,21 @@
 # and can be disabled.
 alertmanager:
   enabled: true
+  config:
+    global:
+      resolve_timeout: 5m
+    routes:
+      group_by: ['alertname', 'cluster', 'namespace', 'service']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      routes:
+        - match:
+           alertname: Watchdog
+           receiver: 'null'
+        - match:
+            alertname: DeadMansSwitch
+            receiver: 'null'
 kube-state-metrics:
   enabled: true
 prometheus-node-exporter:
@@ -20,6 +35,10 @@ server:
   persistentVolume:
     # Give Prometheus more space to store metrics.
     size: 20Gi
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager.observability.svc.cluster.local:9093
 # Scrape metrics from deployed providers
 extraScrapeConfigs: |
   - job_name: 'capi-providers'
@@ -52,3 +71,17 @@ extraScrapeConfigs: |
       - source_labels: [__meta_kubernetes_pod_name]
         action: replace
         target_label: pod
+
+serverFiles:
+  alerting_rules.yml:
+    groups:
+      - name: example
+        rules:
+          - alert: HighRequestLatency
+            expr: http_request_duration_seconds{quantile="0.5"} > 1
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High request latency on {{ $labels.instance }}"
+              description: "{{ $labels.instance }} has a median request latency above 1s (current value: {{ $value }}s)"
