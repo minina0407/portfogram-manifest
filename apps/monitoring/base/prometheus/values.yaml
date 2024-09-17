@@ -1,49 +1,70 @@
-# Configuration for prometheus chart, see https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus
-
-# These components do not make sense in a local dev environment
-# and can be disabled.
 alertmanager:
   enabled: false
-kube-state-metrics:
-  enabled: true
-prometheus-node-exporter:
-  enabled: false
-prometheus-pushgateway:
-  enabled: false
-
-# Alertmanager 연결 설정
-alertmanagerFiles:
-  alertmanager.yml:
-    global: {}
-    receivers: []
-    route:
-      group_by: ['alertname']
-      group_wait: 10s
-      group_interval: 10s
-      repeat_interval: 1h
-      receiver: 'null'
-    inhibit_rules: []
-
-# 외부 Alertmanager 참조 설정
-alertmanagers:
-  - static_configs:
-      - targets:
-          - alertmanager.observability.svc.cluster.local:9093
 
 server:
+  replicaCount: 2
   extraFlags:
-    # Required for configmap-reload.
     - "web.enable-lifecycle"
-    # Used by tempo to write traces.
-    - "web.enable-remote-write-receiver"
+    - "web.enable-admin-api"
   persistentVolume:
-    # Give Prometheus more space to store metrics.
     size: 20Gi
 
-# Scrape metrics from deployed providers
+serverFiles:
+  alerting_rules.yml:
+    groups:
+      - name: use_method_alerts
+        rules:
+          - alert: HighCPUUtilization
+            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU utilization on {{ $labels.instance }}"
+              description: "CPU utilization is above 80% for 5 minutes"
+          - alert: HighMemoryUtilization
+            expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory utilization on {{ $labels.instance }}"
+              description: "Memory utilization is above 90% for 5 minutes"
+          - alert: HighDiskSaturation
+            expr: node_filesystem_files_free{mountpoint="/"} / node_filesystem_files{mountpoint="/"} * 100 < 10
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High disk saturation on {{ $labels.instance }}"
+              description: "Less than 10% free inodes on root filesystem for 5 minutes"
+          - alert: HighLoadAverage
+            expr: node_load1 > on(instance) 2 * count by(instance) (node_cpu_seconds_total{mode="idle"})
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High load average on {{ $labels.instance }}"
+              description: "1 minute load average is more than twice the number of CPUs for 5 minutes"
+          - alert: HighErrorRate
+            expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High HTTP error rate"
+              description: "HTTP error rate is above 5% for 5 minutes"
+          - alert: KubernetesPodCrashLooping
+            expr: kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m > 5
+            for: 15m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Kubernetes pod crash looping"
+              description: "Pod {{ $labels.pod }} is crash looping"
+
 extraScrapeConfigs: |
   - job_name: 'capi-providers'
-    # 15s is a bit often for production but helps to get metrics quicker for development.
     scrape_interval: 15s
     metrics_path: /metrics
     scheme: https
@@ -55,7 +76,6 @@ extraScrapeConfigs: |
       insecure_skip_verify: true
     kubernetes_sd_configs:
       - role: pod
-
     relabel_configs:
       - source_labels: [__meta_kubernetes_pod_labelpresent_cluster_x_k8s_io_provider]
         action: keep
@@ -72,65 +92,64 @@ extraScrapeConfigs: |
       - source_labels: [__meta_kubernetes_pod_name]
         action: replace
         target_label: pod
+  - job_name: 'spring-apps'
+    metrics_path: /actuator/prometheus
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+        action: keep
+        regex: portfogram-server
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+  - job_name: 'otel-collector'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['otel-collector.observability:8889']
+    metric_relabel_configs:
+      - action: labeldrop
+        regex: ^exported_.*
+      - action: labelmap
+        regex: ^otel_(.+)
+        replacement: ${1}
+      - action: replace
+        source_labels: [__name__]
+        regex: ^otel_otel_otel_(.+)
+        target_label: __name__
+        replacement: ${1}
 
-serverFiles:
-  alerting_rules.yml:
-    groups:
-        - name: use_method_alerts
-          rules:
-            # Utilization 알림
-            - alert: HighCPUUtilization
-              expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
-              for: 5m
-              labels:
-                severity: warning
-              annotations:
-                summary: "High CPU utilization on {{ $labels.instance }}"
-                description: "CPU utilization is above 80% for 5 minutes"
+alertmanagerFiles:
+  alertmanager.yml:
+    global: {}
+    receivers: []
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'null'
+    inhibit_rules: []
 
-            - alert: HighMemoryUtilization
-              expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
-              for: 5m
-              labels:
-                severity: warning
-              annotations:
-                summary: "High memory utilization on {{ $labels.instance }}"
-                description: "Memory utilization is above 90% for 5 minutes"
-
-            # Saturation 알림
-            - alert: HighDiskSaturation
-              expr: node_filesystem_files_free{mountpoint="/"} / node_filesystem_files{mountpoint="/"} * 100 < 10
-              for: 5m
-              labels:
-                severity: warning
-              annotations:
-                summary: "High disk saturation on {{ $labels.instance }}"
-                description: "Less than 10% free inodes on root filesystem for 5 minutes"
-
-            - alert: HighLoadAverage
-              expr: node_load1 > on(instance) 2 * count by(instance) (node_cpu_seconds_total{mode="idle"})
-              for: 5m
-              labels:
-                severity: warning
-              annotations:
-                summary: "High load average on {{ $labels.instance }}"
-                description: "1 minute load average is more than twice the number of CPUs for 5 minutes"
-
-            # Errors 알림
-            - alert: HighErrorRate
-              expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
-              for: 5m
-              labels:
-                severity: critical
-              annotations:
-                summary: "High HTTP error rate"
-                description: "HTTP error rate is above 5% for 5 minutes"
-
-            - alert: KubernetesPodCrashLooping
-              expr: kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m > 5
-              for: 15m
-              labels:
-                severity: critical
-              annotations:
-                summary: "Kubernetes pod crash looping"
-                description: "Pod {{ $labels.pod }} is crash looping"
+# 외부 Alertmanager 참조 설정
+alertmanagers:
+  - static_configs:
+      - targets:
+          - alertmanager-alertmanager.observability.svc.cluster.local:9093

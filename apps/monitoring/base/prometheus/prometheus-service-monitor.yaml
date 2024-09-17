@@ -1,14 +1,17 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: prometheus-self-monitor
+  name: prometheus
   namespace: observability
   labels:
-    release: prometheus
+    app: prometheus
 spec:
   selector:
     matchLabels:
-      app: kube-prometheus-stack-prometheus
+      app: prometheus
+  namespaceSelector:
+    matchNames:
+      - observability
   endpoints:
     - port: http
-      interval: 30s
+      interval: 15s
