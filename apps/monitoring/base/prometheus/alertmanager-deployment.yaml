@@ -1,37 +1,42 @@
-# alertmanager-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: alertmanager
   namespace: observability
   labels:
-        app: alertmanager
+    app: alertmanager
 spec:
-    replicas: 1
-    selector:
-        matchLabels:
-         app: alertmanager
-    template:
-        metadata:
-          labels:
-            app: alertmanager
-        spec:
-         containers:
-            - name: alertmanager
-              image: prom/alertmanager:v0.27.0
-              args:
-                - "--config.file=/etc/alertmanager/config.yml"
-                - "--storage.path=/alertmanager"
-              ports:
-                - containerPort: 9093
-              volumeMounts:
-              - name: alertmanager-storage
-                mountPath: /alertmanager
-              - name: alertmanager-config
-                mountPath: /etc/alertmanager
-         volumes:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          args:
+            - "--config.file=/etc/alertmanager/config.yml"
+            - "--storage.path=/alertmanager"
+          ports:
+            - containerPort: 9093
+          volumeMounts:
             - name: alertmanager-storage
-              emptyDir: {}
+              mountPath: /alertmanager
             - name: alertmanager-config
-              configMap:
-                name: alertmanager-config
+              mountPath: /etc/alertmanager
+            - name: alertmanager-secrets
+              mountPath: /etc/alertmanager/secrets
+              readOnly: true
+      volumes:
+        - name: alertmanager-storage
+          emptyDir: {}
+        - name: alertmanager-config
+          configMap:
+            name: alertmanager-config
+        - name: alertmanager-secrets
+          secret:
+            secretName: alertmanager-secrets
