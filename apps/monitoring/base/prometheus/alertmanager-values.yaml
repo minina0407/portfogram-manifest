@@ -13,8 +13,21 @@ alertmanager:
     - name: secrets
       secret:
         secretName: alertmanager-secrets
+    - name: config
+      configMap:
+        name: alertmanager-config
 
   extraVolumeMounts:
     - name: secrets
       mountPath: /etc/alertmanager/secrets
       readOnly: true
+
+    - name: config
+      mountPath: /etc/alertmanager
+      subPath: alertmanager.yml
+
+
+
+  # Alertmanager 컨테이너의 arguments를 오버라이드
+  extraArgs:
+    - "--config.file=/etc/alertmanager/alertmanager.yml"
