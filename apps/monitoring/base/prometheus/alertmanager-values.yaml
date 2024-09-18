@@ -1,7 +1,7 @@
 alertmanager:
-  configMap: alertmanager
-  configMapOverrideName: alertmanager
-  config: {}  # 이 부분을 비워두고 ConfigMap을 사용하도록 합니다.
+  configMap: alertmanager-config
+  configMapOverrideName: alertmanager-config
+  config: {}
   configSecret: alertmanager-secrets
   extraSecretMounts:
     - name: alertmanager-secrets

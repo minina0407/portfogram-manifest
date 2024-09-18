@@ -1,9 +1,7 @@
-
-# alertmanager-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: alertmanager
+  name: alertmanager-config
   namespace: observability
 data:
   alertmanager.yml: |
@@ -30,4 +28,3 @@ data:
               *Severity:* {{ .CommonLabels.severity }}
               *Summary:* {{ (index .Alerts 0).Annotations.summary }}
               *Description:* {{ (index .Alerts 0).Annotations.description }}
-              
