@@ -1,4 +1,5 @@
 alertmanager:
+  configMap: alertmanager-config
   configMapOverrideName: alertmanager-config
   configSecret: alertmanager-secrets
   extraSecretMounts:

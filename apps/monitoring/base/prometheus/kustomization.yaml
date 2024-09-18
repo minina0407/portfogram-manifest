@@ -29,23 +29,3 @@ helmCharts:
 
 helmGlobals:
   chartHome: charts
-
-patchesStrategicMerge:
-  - |-
-    apiVersion: apps/v1
-    kind: StatefulSet
-    metadata:
-      name: alertmanager
-      namespace: observability
-    spec:
-      template:
-        spec:
-          containers:
-            - name: alertmanager
-              volumeMounts:
-                - name: config
-                  mountPath: /etc/alertmanager
-          volumes:
-            - name: config
-              configMap:
-                name: alertmanager-config
