@@ -6,3 +6,14 @@ alertmanager:
       secretName: alertmanager-secrets
       mountPath: /etc/alertmanager/secrets
       readOnly: true
+
+  # volumes와 volumeMounts를 alertmanager 섹션 내부로 이동
+  extraVolumes:
+    - name: secrets
+      secret:
+        secretName: alertmanager-secrets
+
+  extraVolumeMounts:
+    - name: secrets
+      mountPath: /etc/alertmanager/secrets
+      readOnly: true

@@ -10,7 +10,6 @@ data:
     global:
       resolve_timeout: 5m
       slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
-      log_level: debug
 
     route:
       receiver: 'slack-alerts'
@@ -31,10 +30,4 @@ data:
               *Severity:* {{ .CommonLabels.severity }}
               *Summary:* {{ (index .Alerts 0).Annotations.summary }}
               *Description:* {{ (index .Alerts 0).Annotations.description }}
-              {{ if (index .Alerts 0).Annotations.dashboard_url }}
-              *Dashboard:* {{ (index .Alerts 0).Annotations.dashboard_url }}
-              {{ end }}
-              {{ if (index .Alerts 0).Annotations.pod_logs_url }}
-              *Pod Logs:* {{ (index .Alerts 0).Annotations.pod_logs_url }}
-              {{ end }}
               
