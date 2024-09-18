@@ -1,71 +1,8 @@
 alertmanager:
   configMapOverrideName: alertmanager-config
   configSecret: alertmanager-secrets
-  config:
-    global:
-      resolve_timeout: 5m
-      slack_api_url: '{{ .Values.global.slack_api_url }}'
-    route:
-      receiver: 'slack-notifications'
-      group_by: ['alertname', 'job']
-      group_wait: 30s
-      group_interval: 5m
-      repeat_interval: 12h
-      routes:
-        - match:
-            severity: critical
-          receiver: 'slack-critical'
-        - match:
-            severity: warning
-          receiver: 'slack-warnings'
-    receivers:
-      - name: 'slack-notifications'
-        slack_configs:
-          - channel: '#alerts'
-            send_resolved: true
-            title: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}'
-            text: |
-              *Alert:* {{ .GroupLabels.alertname }}
-              *Severity:* {{ .CommonLabels.severity }}
-              *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-              *Description:* {{ (index .Alerts 0).Annotations.description }}
-              {{ if (index .Alerts 0).Annotations.dashboard_url }}
-              *Dashboard:* {{ (index .Alerts 0).Annotations.dashboard_url }}
-              {{ end }}
-              {{ if (index .Alerts 0).Annotations.pod_logs_url }}
-              *Pod Logs:* {{ (index .Alerts 0).Annotations.pod_logs_url }}
-              {{ end }}
-      - name: 'slack-critical'
-        slack_configs:
-          - channel: '#alerts-critical'
-            send_resolved: true
-            icon_emoji: ':red_circle:'
-            title: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}'
-            text: |
-              *Alert:* {{ .GroupLabels.alertname }}
-              *Severity:* {{ .CommonLabels.severity }}
-              *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-              *Description:* {{ (index .Alerts 0).Annotations.description }}
-              {{ if (index .Alerts 0).Annotations.dashboard_url }}
-              *Dashboard:* {{ (index .Alerts 0).Annotations.dashboard_url }}
-              {{ end }}
-              {{ if (index .Alerts 0).Annotations.pod_logs_url }}
-              *Pod Logs:* {{ (index .Alerts 0).Annotations.pod_logs_url }}
-              {{ end }}
-      - name: 'slack-warnings'
-        slack_configs:
-          - channel: '#alerts-warnings'
-            send_resolved: true
-            icon_emoji: ':warning:'
-            title: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}'
-            text: |
-              *Alert:* {{ .GroupLabels.alertname }}
-              *Severity:* {{ .CommonLabels.severity }}
-              *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-              *Description:* {{ (index .Alerts 0).Annotations.description }}
-              {{ if (index .Alerts 0).Annotations.dashboard_url }}
-              *Dashboard:* {{ (index .Alerts 0).Annotations.dashboard_url }}
-              {{ end }}
-              {{ if (index .Alerts 0).Annotations.pod_logs_url }}
-              *Pod Logs:* {{ (index .Alerts 0).Annotations.pod_logs_url }}
-              {{ end }}
+  extraSecretMounts:
+    - name: alertmanager-secrets
+      secretName: alertmanager-secrets
+      mountPath: /etc/alertmanager/secrets
+      readOnly: true
