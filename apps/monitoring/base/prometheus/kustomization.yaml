@@ -8,7 +8,7 @@ resources:
   - prometheus-configmap.yaml
   - prometheus-rbac.yaml
   - alertmanager-sealed-secret.yaml
-  - alertmanager-custom-config.yaml
+  - alertmanager-config.yaml
 
 
 helmCharts:

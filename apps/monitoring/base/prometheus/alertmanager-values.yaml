@@ -1,6 +1,6 @@
 alertmanager:
   configMap: alertmanager-config
-  configMapOverrideName: alertmanager-config
+  configMapOverrideName: "alertmanager-config"
   config: {}
   configSecret: alertmanager-secrets
   extraSecretMounts:
@@ -8,3 +8,5 @@ alertmanager:
       secretName: alertmanager-secrets
       mountPath: /etc/alertmanager/secrets
       readOnly: true
+  alertmanagerSpec:
+    configSecret: alertmanager-secrets
