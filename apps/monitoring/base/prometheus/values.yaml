@@ -137,17 +137,7 @@ extraScrapeConfigs: |
         target_label: __name__
         replacement: ${1}
 
-alertmanagerFiles:
-  alertmanager.yml:
-    global: {}
-    receivers: []
-    route:
-      group_by: ['alertname']
-      group_wait: 10s
-      group_interval: 10s
-      repeat_interval: 1h
-      receiver: 'null'
-    inhibit_rules: []
+
 
 # 외부 Alertmanager 참조 설정
 alertmanagers:
