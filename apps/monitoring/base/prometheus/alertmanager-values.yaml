@@ -8,8 +8,3 @@ alertmanager:
       secretName: alertmanager-secrets
       mountPath: /etc/alertmanager/secrets
       readOnly: true
-  extraConfigmapMounts:
-    - name: alertmanager-config
-      mountPath: /etc/alertmanager
-      configMap: alertmanager-config
-      readOnly: true
