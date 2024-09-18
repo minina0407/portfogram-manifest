@@ -1,33 +1,31 @@
 alertmanager:
   configMap: alertmanager-config
-  configMapOverrideName: alertmanager-config
+  configMapOverrideName: ~
+  config:
+    global:
+      resolve_timeout: 5m
+      slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
+    route:
+      receiver: 'slack-alerts'
+      group_by: ['alertname', 'job']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+    receivers:
+      - name: 'slack-alerts'
+        slack_configs:
+          - channel: '#alert_k8s_alertmanager'
+            send_resolved: true
+            icon_emoji: ':rotating_light:'
+            title: '[{{ .Status | toUpper }}][{{ .CommonLabels.severity | toUpper }}] {{ .GroupLabels.alertname }}'
+            text: |
+              *Alert:* {{ .GroupLabels.alertname }}
+              *Severity:* {{ .CommonLabels.severity }}
+              *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+              *Description:* {{ (index .Alerts 0).Annotations.description }}
   configSecret: alertmanager-secrets
   extraSecretMounts:
     - name: alertmanager-secrets
       secretName: alertmanager-secrets
       mountPath: /etc/alertmanager/secrets
       readOnly: true
-
-  # volumes와 volumeMounts를 alertmanager 섹션 내부로 이동
-  extraVolumes:
-    - name: secrets
-      secret:
-        secretName: alertmanager-secrets
-    - name: config
-      configMap:
-        name: alertmanager-config
-
-  extraVolumeMounts:
-    - name: secrets
-      mountPath: /etc/alertmanager/secrets
-      readOnly: true
-
-    - name: config
-      mountPath: /etc/alertmanager
-      subPath: alertmanager.yml
-
-
-
-  # Alertmanager 컨테이너의 arguments를 오버라이드
-  extraArgs:
-    - "--config.file=/etc/alertmanager/alertmanager.yml"
