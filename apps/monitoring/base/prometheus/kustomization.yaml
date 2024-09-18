@@ -1,4 +1,3 @@
-#kusomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -10,7 +9,6 @@ resources:
   - prometheus-rbac.yaml
   - alertmanager-sealed-secret.yaml
   - alertmanager-config.yaml
-
 
 helmCharts:
   - name: prometheus
@@ -32,3 +30,22 @@ helmCharts:
 helmGlobals:
   chartHome: charts
 
+patchesStrategicMerge:
+  - |-
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: alertmanager
+      namespace: observability
+    spec:
+      template:
+        spec:
+          containers:
+            - name: alertmanager
+              volumeMounts:
+                - name: config
+                  mountPath: /etc/alertmanager
+          volumes:
+            - name: config
+              configMap:
+                name: alertmanager-config
