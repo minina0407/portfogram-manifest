@@ -1,28 +1,7 @@
 alertmanager:
-  configMap: alertmanager-config
-  configMapOverrideName: ~
-  config:
-    global:
-      resolve_timeout: 5m
-      slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
-    route:
-      receiver: 'slack-alerts'
-      group_by: ['alertname', 'job']
-      group_wait: 30s
-      group_interval: 5m
-      repeat_interval: 12h
-    receivers:
-      - name: 'slack-alerts'
-        slack_configs:
-          - channel: '#alert_k8s_alertmanager'
-            send_resolved: true
-            icon_emoji: ':rotating_light:'
-            title: '[{{ .Status | toUpper }}][{{ .CommonLabels.severity | toUpper }}] {{ .GroupLabels.alertname }}'
-            text: |
-              *Alert:* {{ .GroupLabels.alertname }}
-              *Severity:* {{ .CommonLabels.severity }}
-              *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-              *Description:* {{ (index .Alerts 0).Annotations.description }}
+  configMap: alertmanager
+  configMapOverrideName: alertmanager-config
+  config: {}  # 이 부분을 비워두고 ConfigMap을 사용하도록 합니다.
   configSecret: alertmanager-secrets
   extraSecretMounts:
     - name: alertmanager-secrets
