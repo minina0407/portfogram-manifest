@@ -10,6 +10,7 @@ resources:
   - alertmanager-sealed-secret.yaml
   - alertmanager-config.yaml
   - alertmanager-deployment.yaml
+  - alertmanager-service.yaml
 
 
 helmCharts:
