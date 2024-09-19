@@ -3,15 +3,18 @@ alertmanager:
   enabled: false
 
 server:
-  replicaCount: 1
+  replicaCount: 2
   extraFlags:
     - "web.enable-lifecycle"
     - "web.enable-admin-api"
   persistentVolume:
     size: 20Gi
 
-pushgateway:
-  enabled: false
+prometheus:
+  pushgateway:
+    enabled: false
+
+
 
 serverFiles:
   alerting_rules.yml:
