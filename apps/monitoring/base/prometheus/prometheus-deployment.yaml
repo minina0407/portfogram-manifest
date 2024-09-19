@@ -68,6 +68,15 @@ spec:
         - name: prometheus-config
           configMap:
             name: prometheus-config
+            items:
+              - key: prometheus.yml
+                path: prometheus.yml
+        - name: prometheus-rules
+          configMap:
+            name: prometheus-config
+            items:
+              - key: rules.yml
+                path: rules.yml
         - name: prometheus-storage
           emptyDir: {}
         - name: thanos-config
