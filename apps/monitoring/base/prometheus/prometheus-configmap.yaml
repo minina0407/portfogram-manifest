@@ -19,8 +19,9 @@ data:
       alertmanagers:
         - static_configs:
             - targets:
-                - alertmanager.observability.svc.cluster.local:9093
-        
+              - alertmanager.observability:9093
+    
+    
     scrape_configs:
       - job_name: 'prometheus'
         static_configs:
