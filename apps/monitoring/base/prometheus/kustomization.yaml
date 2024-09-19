@@ -12,6 +12,8 @@ resources:
   - alertmanager-sealed-secret.yaml
   - thanos-sidecar-configmap.yaml
   - prometheus-service-monitor.yaml
+  - prometheus-service.yaml
+  - prometheus-deployment.yaml
 
 
 

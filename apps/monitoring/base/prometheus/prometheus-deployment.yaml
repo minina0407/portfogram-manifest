@@ -5,7 +5,7 @@ metadata:
   name: prometheus
   namespace: observability
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: prometheus
@@ -27,15 +27,28 @@ spec:
             - "--storage.tsdb.max-block-duration=2h"
           ports:
             - containerPort: 9090
-
-
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 15
           volumeMounts:
-            - name: prometheus-storage
-              mountPath: /prometheus
             - name: prometheus-config
               mountPath: /etc/prometheus
-
-
+            - name: prometheus-storage
+              mountPath: /prometheus
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
         - name: thanos-sidecar
           image: quay.io/thanos/thanos:v0.31.0
           args:
@@ -45,20 +58,18 @@ spec:
             - "--objstore.config-file=/etc/thanos/objstore.yaml"
           ports:
             - containerPort: 10901
+              name: grpc
           volumeMounts:
             - name: prometheus-storage
               mountPath: /prometheus
             - name: thanos-config
               mountPath: /etc/thanos
       volumes:
-        - name: prometheus-storage
-          emptyDir: {}
         - name: prometheus-config
           configMap:
             name: prometheus-config
+        - name: prometheus-storage
+          emptyDir: {}
         - name: thanos-config
           configMap:
             name: thanos-objstore-config
-            items:
-              - key: objstore.yaml
-                path: objstore.yaml
