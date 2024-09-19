@@ -11,6 +11,7 @@ resources:
   - alertmanager-config.yaml
   - alertmanager-deployment.yaml
   - alertmanager-service.yaml
+  - alertmanager-values.yaml
 
 
 helmCharts:

@@ -1,3 +1,4 @@
+# alertmanager-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -37,6 +38,7 @@ spec:
         - name: alertmanager-config
           configMap:
             name: alertmanager-config
-        - name: alertmanager-secrets
+        - name: secret-volume
           secret:
+            # seal:sealed-secret-name
             secretName: alertmanager-secrets
