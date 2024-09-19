@@ -13,8 +13,17 @@ server:
 serverFiles:
   alerting_rules.yml:
     groups:
+
       - name: use_method_alerts
         rules:
+          - alert: InstantTestAlert
+            expr: vector(1) > 0
+            for: 0m
+            labels:
+              severity: info
+            annotations:
+              summary: "Test Alert"
+              description: "This is a test alert from Grafana"
           - alert: HighCPUUtilization
             expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
             for: 5m
@@ -139,8 +148,9 @@ extraScrapeConfigs: |
 
 
 
+
 # 외부 Alertmanager 참조 설정
 alertmanagers:
   - static_configs:
       - targets:
-          - alertmanager-alertmanager.observability.svc.cluster.local:9093
+          - alertmanager:9093
