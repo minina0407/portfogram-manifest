@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: alertmanager-service
+  name: alertmanager
   namespace: observability
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: alertmanager
   ports:
     - protocol: TCP
-      port: 9093       # 서비스에서 노출할 포트
+      port: 9093
       targetPort: 9093
