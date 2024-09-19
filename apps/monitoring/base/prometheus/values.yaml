@@ -147,9 +147,3 @@ extraScrapeConfigs: |
 
 
 
-
-# 외부 Alertmanager 참조 설정
-alertmanagers:
-  - static_configs:
-      - targets:
-          - alertmanager:9093
