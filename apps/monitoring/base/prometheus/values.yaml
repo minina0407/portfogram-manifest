@@ -13,16 +13,25 @@ server:
 serverFiles:
   alerting_rules.yml:
     groups:
-      - name: use_method_alerts
-        rules:
-          - alert: InstantTestAlert
-            expr: vector(1) > 0
-            for: 0m
+          - alert: NodeDown
+            expr: up{job="kubernetes-nodes"} == 0
+            for: 5m
             labels:
-              severity: warning
+                severity: critical
             annotations:
-              summary: "Test Alert"
-              description: "This is a test alert from Grafana"
+                summary: "Node {{ $labels.node }} is down"
+                description: "Node {{ $labels.node }} has been down for more than 5 minutes."
+
+
+          - alert: PodCrashLooping
+            expr: increase(kube_pod_container_status_restarts_total[1h]) > 5
+            for: 10m
+            labels:
+                severity: warning
+            annotations:
+                summary: "Pod {{ $labels.pod }} is crash looping"
+                description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted more than 5 times in the last hour."
+
           - alert: HighCPUUtilization
             expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
             for: 5m

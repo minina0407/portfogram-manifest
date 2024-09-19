@@ -27,6 +27,21 @@ spec:
             - "--storage.tsdb.max-block-duration=2h"
           ports:
             - containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            failureThreshold: 3
+
 
           volumeMounts:
             - name: prometheus-storage

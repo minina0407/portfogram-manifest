@@ -1,11 +1,9 @@
 # alertmanager-deployment.yaml
+# alertmanager-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: alertmanager
-  namespace: observability
-  labels:
-    app: alertmanager
 spec:
   replicas: 1
   selector:
@@ -18,27 +16,47 @@ spec:
     spec:
       containers:
         - name: alertmanager
-          image: prom/alertmanager:latest
+          image: prom/alertmanager:v0.27.0
           args:
             - "--config.file=/etc/alertmanager/config.yml"
             - "--storage.path=/alertmanager"
           ports:
             - containerPort: 9093
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9093
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9093
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
           volumeMounts:
-            - name: alertmanager-storage
-              mountPath: /alertmanager
-            - name: alertmanager-config
+            - name: config-volume
               mountPath: /etc/alertmanager
-            - name: alertmanager-secrets
+            - name: secrets-volume
               mountPath: /etc/alertmanager/secrets
               readOnly: true
+            - name: storage-volume
+              mountPath: /alertmanager
       volumes:
-        - name: alertmanager-storage
-          emptyDir: {}
-        - name: alertmanager-config
+        - name: config-volume
           configMap:
             name: alertmanager-config
-        - name: secret-volume
+        - name: secrets-volume
           secret:
-            # seal:sealed-secret-name
             secretName: alertmanager-secrets
+        - name: storage-volume
+          emptyDir: {}
