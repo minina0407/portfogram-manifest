@@ -42,5 +42,5 @@ config: |
     storage:
       path: "/tmp/tempo"
       remote_write:
-      - url: "http://prometheus-server:9090/api/v1/write"
+      - url: "http://prometheus:9090/api/v1/write"
         send_exemplars: true

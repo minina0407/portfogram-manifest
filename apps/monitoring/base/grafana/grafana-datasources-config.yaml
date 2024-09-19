@@ -21,7 +21,7 @@ data:
       - name: Prometheus
         type: prometheus
         uid: prometheus
-        url: http://prometheus-server
+        url: http://prometheus
         jsonData:
           httpMethod: GET
           exemplarTraceIdDestinations:

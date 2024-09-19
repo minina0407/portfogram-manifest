@@ -144,7 +144,7 @@ spec:
           job: true
     
       prometheusremotewrite:
-        endpoint: "http://prometheus-server.observability.svc.cluster.local:9090/api/v1/write"
+        endpoint: "http://prometheus.observability.svc.cluster.local:9090/api/v1/write"
         tls:
           insecure: true
         resource_to_telemetry_conversion:
