@@ -14,7 +14,7 @@ data:
         replica: '$(POD_NAME)'
     
     rule_files:
-      - /etc/prometheus/rules/*.yml
+      - /etc/prometheus/rules/alert.rules
 
     alerting:
       alertmanagers:
