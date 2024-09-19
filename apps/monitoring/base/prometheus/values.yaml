@@ -19,7 +19,7 @@ serverFiles:
             expr: vector(1) > 0
             for: 0m
             labels:
-              severity: info
+              severity: warning
             annotations:
               summary: "Test Alert"
               description: "This is a test alert from Grafana"
