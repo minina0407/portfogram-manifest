@@ -3,7 +3,7 @@ alertmanager:
   enabled: false
 
 server:
-  replicaCount: 2
+  replicaCount: 1
   extraFlags:
     - "web.enable-lifecycle"
     - "web.enable-admin-api"
