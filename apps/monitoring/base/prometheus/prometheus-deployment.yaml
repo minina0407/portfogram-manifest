@@ -41,7 +41,11 @@ spec:
             periodSeconds: 15
           volumeMounts:
             - name: prometheus-config
-              mountPath: /etc/prometheus
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
+            - name: prometheus-rules
+              mountPath: /etc/prometheus/rules.yml
+              subPath: rules.yml
             - name: prometheus-storage
               mountPath: /prometheus
           env:
