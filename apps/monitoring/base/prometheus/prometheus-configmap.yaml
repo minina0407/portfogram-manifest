@@ -171,3 +171,13 @@ data:
               annotations:
                 summary: "Kubernetes pod crash looping"
                 description: "Pod {{ $labels.pod }} is crash looping"
+            
+      
+            - alert: InstantTestAlert
+              expr: vector(1) > 0
+              for: 0m
+              labels:
+               severity: info
+              annotations:
+                summary: "Test Alert"
+                description: "This is a test alert from Grafana"
