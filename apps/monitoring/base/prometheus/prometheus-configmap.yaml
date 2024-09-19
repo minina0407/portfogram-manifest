@@ -17,9 +17,18 @@ data:
     
     alerting:
       alertmanagers:
-        - static_configs:
-            - targets:
-              - alertmanager.observability:9093
+        - kubernetes_sd_configs:
+            - role: pod
+          namespace_selector:
+            matchNames:
+              - observability
+          pod_label_selector:
+            matchLabels:
+              app: alertmanager
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_container_port_number]
+              regex: "9093"
+              action: keep
     
     
     scrape_configs:
