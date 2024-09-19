@@ -1,8 +1,8 @@
-#alertmanager-config.yaml
+#alertmanager-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: alertmanager-config
+  name: alertmanager-configmap
   namespace: observability
 data:
   config.yml: |

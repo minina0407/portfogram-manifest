@@ -1,6 +1,6 @@
 # alertmanager-values.yaml
 alertmanager:
-  configMap: alertmanager-config
+  configMap: alertmanager-configmap
   configMapOverrideName: "alertmanager-config"
   config: {}
   configSecret: alertmanager-secrets
