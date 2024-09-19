@@ -26,3 +26,6 @@ data:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/default
+
+
+

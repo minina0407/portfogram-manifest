@@ -58,3 +58,9 @@ global:
 serviceMonitor:
   enabled: true
 
+# loki canary 비활성
+canary:
+  enabled: false
+# grafana agent operator 비활성
+grafanaAgent:
+  enabled: false
