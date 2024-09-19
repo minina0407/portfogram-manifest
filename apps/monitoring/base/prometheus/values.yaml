@@ -13,7 +13,6 @@ server:
 serverFiles:
   alerting_rules.yml:
     groups:
-
       - name: use_method_alerts
         rules:
           - alert: InstantTestAlert
