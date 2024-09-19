@@ -5,7 +5,6 @@ namespace: observability
 
 resources:
   - prometheus-configmap.yaml
-  - prometheus-deployment.yaml
   - prometheus-rbac.yaml
   - alertmanager-configmap.yaml
   - alertmanager-deployment.yaml
