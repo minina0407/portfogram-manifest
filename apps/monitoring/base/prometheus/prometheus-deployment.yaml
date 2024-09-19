@@ -2,17 +2,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-server
+  name: prometheus
   namespace: observability
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prometheus-server
+      app: prometheus
   template:
     metadata:
       labels:
-        app: prometheus-server
+        app: prometheus
     spec:
       serviceAccountName: prometheus
       containers:
