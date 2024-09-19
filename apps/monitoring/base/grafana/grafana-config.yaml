@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-config
+  namespace: observability
 data:
   grafana.ini: |
     [auth.anonymous]
@@ -10,3 +11,30 @@ data:
 
     [feature_toggles]
     enable = tempoSearch tempoBackendSearch
+
+    [unified_alerting]
+    enabled = true
+
+    [alerting]
+    enabled = false
+
+    [alertmanager]
+    [alertmanager.alertmanagers]
+    [alertmanager.alertmanagers.1]
+    org_id = 1
+    type = external
+    name = alertmanager
+    url = http://alertmanager.observability:9093
+    
+    [server]
+    root_url = http://localhost:3000
+    
+    [security]
+    allow_embedding = true
+    
+    [users]
+    auto_assign_org = true
+    auto_assign_org_role = Admin
+    
+    [dashboards]
+    default_home_dashboard_path = /var/lib/grafana/dashboards/home.json
