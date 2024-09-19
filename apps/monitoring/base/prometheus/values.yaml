@@ -10,6 +10,9 @@ server:
   persistentVolume:
     size: 20Gi
 
+pushgateway:
+  enabled: false
+
 serverFiles:
   alerting_rules.yml:
     groups:
