@@ -82,11 +82,19 @@ data:
     groups:
       - name: example
         rules:
-          - alert: HighCPUUsage
-            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: High CPU usage detected
-              description: CPU usage is above 80% on {{ $labels.instance }}
+        - alert: AlwaysFiring
+          expr: vector(1)
+          labels:
+            severity: warning
+          annotations:
+            summary: This alert is always firing
+            description: This is a test alert that is always firing
+
+        - alert: HighCPUUsage
+          expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High CPU usage detected
+            description: CPU usage is above 80% on {{ $labels.instance }}
