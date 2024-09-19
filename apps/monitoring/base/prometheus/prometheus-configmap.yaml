@@ -20,13 +20,9 @@ data:
       alertmanagers:
         - static_configs:
             - targets:
-                - "alertmanager.observability.svc.cluster.local:9093"
+                - alertmanager.observability.svc.cluster.local:9093
 
     scrape_configs:
-      - job_name: 'prometheus'
-        static_configs:
-          - targets: ['localhost:9090']
-      
       - job_name: 'kubernetes-apiservers'
         kubernetes_sd_configs:
           - role: endpoints
@@ -80,3 +76,16 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: kubernetes_pod_name
+
+  rules.yml: |
+    groups:
+      - name: example
+        rules:
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: High CPU usage detected
+              description: CPU usage is above 80% on {{ $labels.instance }}

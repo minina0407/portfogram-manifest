@@ -45,7 +45,7 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/alertmanager
-            - name: secrets-volume
+            - name: alertmanager-secrets
               mountPath: /etc/alertmanager/secrets
               readOnly: true
             - name: storage-volume
@@ -53,9 +53,19 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: alertmanager-configmap
-        - name: secrets-volume
+            name: alertmanager-config
+        - name: alertmanager-secrets
           secret:
             secretName: alertmanager-secrets
         - name: storage-volume
           emptyDir: {}
+---
+# alertmanager-sealed-secret.yaml
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: alertmanager-secrets
+  namespace: observability
+spec:
+  encryptedData:
+    slack_api_url: AgA/1nagTszdoaFon3nfuvZ9ozRGjz6GOgUELybgItVrQqXTJxqz6plSkb70gqKtMpVbGHWD8dc19x3erSWfBPlD+3fVx7fF4tp2jQeBpT3DAP2GjSroV+3lICgccuTFYLA+txZ8lPJHAqnXPuzF0j4bjUKw58HxGfw6NWu143TngWXJFa00oiibLYBy0BtjHu2+1s6Fd8aeSH5o03q2COFv/eYY1yCUB6yKpzt8MAq4neozc+teR7EJtQIgRxGNfzEBfKS0WV85N2N3A4ye/6Q9cgNyIGyW9X0HVREYECsEkPDIKgnAV71Qr1UXAw5eXKXZdAbUO2yM/irNRozH8qZZAxfRcgfm95P1i9YKi/uGnvsH3Gqym46139P6lfZnvc0DGzhuCYWxIV2SYDQbRs3ahHRAE22Yx3tfrwdR9dLpOusza2TQkDfoY4UbD7qIbxRKnWxi8rin+gtK4+3chE23Uu5StOzHOZQ4qO3fMHqlX5v2R4c68+wc1na9hJb26lZTxWlch3LiwrPSO1+kfr0jo10EihXZ61bhhDu2UeM+4gMokql7e8wCNPhSF2KMo6Qy3XJLbGquE/vaAy657JK+09tjYKvDLke3TsNIuMXhCE+SKfd7KDlJ407KZZz107T6uCbF6UB/9J5h3afBXTn2YTF7uAP7AK1z6N3hNVDvZ4ps+bg4kbIZFf64RICBidgTLEJiV23mErn3MWXWRxNNyssEhJNRSdkUNBg8mvR6qzjYCAZUtr8SVreS3/P0zkPD8U7Am68OmlTl0BbF8IV17uxfBr7B2NgfF+kPsHNMacs=
