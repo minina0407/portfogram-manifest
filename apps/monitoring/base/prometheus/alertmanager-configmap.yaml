@@ -10,24 +10,72 @@ data:
       slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
 
     route:
-      receiver: 'slack-alerts'
-      group_by: ['alertname', 'cluster', 'service']
+      receiver: 'slack-alerts' # Default receiver
+      group_by: ['alertname', 'job']
       group_wait: 30s
       group_interval: 5m
-      repeat_interval: 12h
-
+      repeat_interval: 3h
+      routes:
+        - match:
+            severity: critical
+          receiver: 'slack-critical'
+          continue: true
+        - match:
+            team: backend
+          receiver: 'slack-backend'
+          
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'job']
+        
     receivers:
       - name: 'slack-alerts'
         slack_configs:
-          - channel: '#alert_k8s_alertmanager'
+          - channel: '#alerts'
             send_resolved: true
-            icon_emoji: ':rotating_light:'
-            title: '[{{ .Status | toUpper }}][{{ .CommonLabels.severity | toUpper }}] {{ .GroupLabels.alertname }}'
-            text: |
-              *Alert:* {{ .GroupLabels.alertname }}
-              *Severity:* {{ .CommonLabels.severity }}
-              *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-              *Description:* {{ (index .Alerts 0).Annotations.description }}
+      - name: 'slack-critical'
+        slack_configs:
+          - channel: '#critical-alerts'
+            send_resolved: true
+      - name: 'slack-backend'
+        slack_configs:
+          - channel: '#backend-alerts'
+            send_resolved: true
 
     templates:
-      - '/etc/alertmanager/*.tmpl'
+      - '/etc/alertmanager/template.tmpl'
+  template.tmpl: |
+    {{ define "slack.default.title" }}
+    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
+    {{ end }}
+    
+    {{ define "slack.default.text" }}
+    :{{ if eq .Status "firing" }}fire_engine{{ else }}green_heart{{ end }}: *{{ .Status | toUpper }}*: {{ .GroupLabels.alertname }}
+    {{ .CommonAnnotations.summary }}
+    
+    *Description:* {{ .CommonAnnotations.description }}
+    *Severity:* {{ .CommonLabels.severity }}
+    *Job:* {{ .CommonLabels.job }}
+    
+    {{ if gt (len .Alerts.Firing) 0 }}
+    *Alerts Firing:*
+    {{ range .Alerts.Firing }}
+      • {{ .Annotations.description }}
+    {{ end }}
+    {{ end }}
+    
+    {{ if gt (len .Alerts.Resolved) 0 }}
+    *Alerts Resolved:*
+    {{ range .Alerts.Resolved }}
+      • {{ .Annotations.description }}
+    {{ end }}
+    {{ end }}
+    
+    *Runbook:* {{ .CommonAnnotations.runbook_url }}
+    *Grafana:* {{ .CommonAnnotations.grafana_url }}
+    {{ end }}      
+      
+      

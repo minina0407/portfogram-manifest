@@ -13,3 +13,4 @@ resources:
   - prometheus-service-monitor.yaml
   - prometheus-service.yaml
   - prometheus-deployment.yaml
+
