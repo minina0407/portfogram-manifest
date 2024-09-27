@@ -1,4 +1,4 @@
-apiVersion: opentelemetry.io/v1alpha1
+apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: otel-collector
@@ -8,7 +8,7 @@ metadata:
 spec:
   serviceAccount: otel-collector
   image: otel/opentelemetry-collector-contrib:latest
-  mode: deployment
+  mode: statefulset
   config: |
     receivers:
       otlp:
