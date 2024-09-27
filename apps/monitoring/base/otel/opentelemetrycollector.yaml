@@ -2,14 +2,15 @@ apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: otel-collector
+  namespace: observability
   labels:
     app.kubernetes.io/name: otel-collector
     app.kubernetes.io/component: opentelemetry-collector
 spec:
+  mode: deployment
   serviceAccount: otel-collector
   image: otel/opentelemetry-collector-contrib:latest
-  mode: statefulset
-  config: |
+  config:
     receivers:
       otlp:
         protocols:
