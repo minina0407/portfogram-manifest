@@ -24,7 +24,7 @@ data:
           continue: true
         - match:
            severity: waring
-          receiver: 'slack-waring'
+          receiver: 'slack-warning'
           continue: true
         - match:
             team: backend
