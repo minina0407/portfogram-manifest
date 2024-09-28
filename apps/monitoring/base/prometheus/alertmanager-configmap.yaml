@@ -5,6 +5,8 @@ metadata:
   name: alertmanager-config
   namespace: observability
 data:
+# slack_uri의 경우 git에 노출되게 되면, 자동으로 SLack측에서 이걸 위험으로 감지하고 해당 uri를 무효화시킴
+  # 그래서 slack-uri의 경우 Sealed-secret 이용해서 처리함 -> 미디움에 정리
   alertmanager.yml: |
     global:
       slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
@@ -43,6 +45,10 @@ data:
       - name: 'slack-critical'
         slack_configs:
           - channel: '#critical-alerts'
+            send_resolved: true
+      - name: 'slack-warning' 
+        slack_configs:
+          - channel: '#warning-alerts'
             send_resolved: true
       - name: 'slack-backend'
         slack_configs:
