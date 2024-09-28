@@ -91,7 +91,7 @@ data:
         - alert: AlwaysFiring
           expr: vector(1)
           labels:
-            severity: warning
+            severity: critical
           annotations:
             summary: This alert is always firing
             description: This is a test alert that is always firing
