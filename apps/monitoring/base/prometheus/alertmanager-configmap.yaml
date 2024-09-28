@@ -21,6 +21,10 @@ data:
           receiver: 'slack-critical'
           continue: true
         - match:
+           severity: waring
+          receiver: 'slack-waring'
+          continue: true
+        - match:
             team: backend
           receiver: 'slack-backend'
           
