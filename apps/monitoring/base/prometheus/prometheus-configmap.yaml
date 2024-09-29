@@ -83,8 +83,9 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: kubernetes_pod_name
-
-  rules.yml: | 
+            
+            
+  rules.yml: |
     groups:
       - name: example
         rules:
@@ -95,7 +96,7 @@ data:
           annotations:
             summary: This alert is always firing
             description: This is a test alert that is always firing
-
+  
         - alert: HighCPUUsage
           expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
           for: 5m
@@ -104,82 +105,74 @@ data:
           annotations:
             summary: High CPU usage detected
             description: CPU usage is above 80% on {{ $labels.instance }}
-    
-      - name: kubernetes-system-alerts
-        rules: 
-          - alert: EKSNodeNotReady
-            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
-            for: 5m
-            labels:
-              severity: critical
-            annotations:
-              summary: "EKS 노드 {{ $labels.node }} Ready 상태 아님"
-              description: "EKS 노드 {{ $labels.node }}가 5분 이상 Ready 상태가 아닙니다. AWS 콘솔에서 노드 상태를 확인하세요."
   
-      # OpenTelemetry 관련 알림
-      - alert: OTelCollectorHighCPUUsage
-        expr: rate(process_cpu_seconds_total{job="otel-collector"}[5m]) > 0.8
-        for: 10m
-        labels:
-          severity: warning
-          team: observability
-        annotations:
-          summary: "OpenTelemetry Collector CPU 사용량 높음"
-          description: "OpenTelemetry Collector의 CPU 사용량이 10분 동안 80%를 초과했습니다. 수집기 구성을 최적화하거나 리소스를 늘리는 것을 고려하세요."
-      
-      # Loki 관련 알림
-      - alert: LokiHighQueryLatency
-        expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{route="/loki/api/v1/query_range"}[5m])) by (le)) > 10
-        for: 15m
-        labels:
-          severity: warning
-          team: observability
-        annotations:
-          summary: "Loki 쿼리 지연 시간 높음"
-          description: "Loki 쿼리의 99번째 백분위 지연 시간이 15분 동안 10초를 초과했습니다. 로그 쿼리 최적화가 필요할 수 있습니다."
-      
-      # Redis 관련 알림
-      - alert: RedisHighMemoryUsage
-        expr: redis_memory_used_bytes / redis_total_system_memory_bytes * 100 > 90
-        for: 15m
-        labels:
-          severity: warning
-          team: database
-        annotations:
-          summary: "Redis 메모리 사용량 높음"
-          description: "Redis 인스턴스의 메모리 사용량이 15분 동안 90%를 초과했습니다. 캐시 정책을 검토하거나 메모리를 증설하세요."
-      
-      # EKS 특화 알림
-      - alert: EKSPodPending
-        expr: sum(kube_pod_status_phase{phase="Pending"}) > 5
-        for: 10m
-        labels:
-          severity: warning
-          team: infrastructure
-        annotations:
-          summary: "다수의 EKS Pod Pending 상태"
-          description: "10분 이상 5개 이상의 Pod가 Pending 상태입니다. EKS 노드 용량을 확인하고 필요시 Auto Scaling 설정을 조정하세요."
-      
-      # 애플리케이션 특화 알림 (포트폴리오 플랫폼 관련)
-      - alert: HighErrorRatePortfolioAPI
-        expr: sum(rate(http_requests_total{handler="/api/portfolio", status=~"5.."}[5m])) / sum(rate(http_requests_total{handler="/api/portfolio"}[5m])) * 100 > 5
-        for: 5m
-        labels:
-          severity: critical
-          team: backend
-        annotations:
-          summary: "포트폴리오 API 높은 오류율"
-          description: "포트폴리오 API의 오류율이 5분 동안 5%를 초과했습니다. 백엔드 로그와 성능을 확인하세요."
-       
-      # GitHub Actions 관련 알림
-      - alert: GitHubActionsJobFailure
-        expr: github_actions_workflow_job_status{status="failure"} > 0
-        for: 15m
-        labels:
-          severity: warning
-          team: devops
-        annotations:
-          summary: "GitHub Actions 작업 실패"
-          description: "GitHub Actions 작업 {{ $labels.job_name }}이(가) {{ $labels.workflow }} 워크플로우에서 실패했습니다. CI/CD 파이프라인을 점검하세요."
-      
-      
+      - name: kubernetes-system-alerts
+        rules:
+        - alert: EKSNodeNotReady
+          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "EKS 노드 {{ $labels.node }} Ready 상태 아님"
+            description: "EKS 노드 {{ $labels.node }}가 5분 이상 Ready 상태가 아닙니다. AWS 콘솔에서 노드 상태를 확인하세요."
+  
+        - alert: OTelCollectorHighCPUUsage
+          expr: rate(process_cpu_seconds_total{job="otel-collector"}[5m]) > 0.8
+          for: 10m
+          labels:
+            severity: warning
+            team: observability
+          annotations:
+            summary: "OpenTelemetry Collector CPU 사용량 높음"
+            description: "OpenTelemetry Collector의 CPU 사용량이 10분 동안 80%를 초과했습니다. 수집기 구성을 최적화하거나 리소스를 늘리는 것을 고려하세요."
+  
+        - alert: LokiHighQueryLatency
+          expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{route="/loki/api/v1/query_range"}[5m])) by (le)) > 10
+          for: 15m
+          labels:
+            severity: warning
+            team: observability
+          annotations:
+            summary: "Loki 쿼리 지연 시간 높음"
+            description: "Loki 쿼리의 99번째 백분위 지연 시간이 15분 동안 10초를 초과했습니다. 로그 쿼리 최적화가 필요할 수 있습니다."
+  
+        - alert: RedisHighMemoryUsage
+          expr: redis_memory_used_bytes / redis_total_system_memory_bytes * 100 > 90
+          for: 15m
+          labels:
+            severity: warning
+            team: database
+          annotations:
+            summary: "Redis 메모리 사용량 높음"
+            description: "Redis 인스턴스의 메모리 사용량이 15분 동안 90%를 초과했습니다. 캐시 정책을 검토하거나 메모리를 증설하세요."
+  
+        - alert: EKSPodPending
+          expr: sum(kube_pod_status_phase{phase="Pending"}) > 5
+          for: 10m
+          labels:
+            severity: warning
+            team: infrastructure
+          annotations:
+            summary: "다수의 EKS Pod Pending 상태"
+            description: "10분 이상 5개 이상의 Pod가 Pending 상태입니다. EKS 노드 용량을 확인하고 필요시 Auto Scaling 설정을 조정하세요."
+  
+        - alert: HighErrorRatePortfolioAPI
+          expr: sum(rate(http_requests_total{handler="/api/portfolio", status=~"5.."}[5m])) / sum(rate(http_requests_total{handler="/api/portfolio"}[5m])) * 100 > 5
+          for: 5m
+          labels:
+            severity: critical
+            team: backend
+          annotations:
+            summary: "포트폴리오 API 높은 오류율"
+            description: "포트폴리오 API의 오류율이 5분 동안 5%를 초과했습니다. 백엔드 로그와 성능을 확인하세요."
+  
+        - alert: GitHubActionsJobFailure
+          expr: github_actions_workflow_job_status{status="failure"} > 0
+          for: 15m
+          labels:
+            severity: warning
+            team: devops
+          annotations:
+            summary: "GitHub Actions 작업 실패"
+            description: "GitHub Actions 작업 {{ $labels.job_name }}이(가) {{ $labels.workflow }} 워크플로우에서 실패했습니다. CI/CD 파이프라인을 점검하세요."
