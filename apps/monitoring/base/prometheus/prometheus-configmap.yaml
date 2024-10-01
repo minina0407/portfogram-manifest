@@ -102,6 +102,7 @@ data:
           for: 5m
           labels:
             severity: warning
+            team: infrastructure
           annotations:
             summary: High CPU usage detected
             description: CPU usage is above 80% on {{ $labels.instance }}
@@ -176,3 +177,17 @@ data:
           annotations:
             summary: "GitHub Actions 작업 실패"
             description: "GitHub Actions 작업 {{ $labels.job_name }}이(가) {{ $labels.workflow }} 워크플로우에서 실패했습니다. CI/CD 파이프라인을 점검하세요."
+        
+        - alert: TestWarning
+          expr: vector(1)
+          labels:
+            severity: warning
+          annotations:
+            summary: Test warning alert
+    
+        - alert: TestBackend
+          expr: vector(1)
+          labels:
+            team: backend
+          annotations:
+            summary: Test backend alert
