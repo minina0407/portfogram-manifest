@@ -188,6 +188,7 @@ data:
         - alert: TestBackend
           expr: vector(1)
           labels:
+            severity: warning
             team: backend
           annotations:
             summary: Test backend alert

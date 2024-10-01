@@ -19,11 +19,9 @@ data:
         - match:
             severity: critical
           receiver: 'slack-critical'
-          continue: true
         - match:
             severity: warning
           receiver: 'slack-warning'
-          continue: true
         - match:
             team: backend
           receiver: 'slack-backend'
