@@ -158,14 +158,14 @@ data:
             description: "10분 이상 5개 이상의 Pod가 Pending 상태입니다. EKS 노드 용량을 확인하고 필요시 Auto Scaling 설정을 조정하세요."
   
         - alert: HighErrorRatePortfolioAPI
-          expr: sum(rate(http_requests_total{handler="/api/portfolio", status=~"5.."}[5m])) / sum(rate(http_requests_total{handler="/api/portfolio"}[5m])) * 100 > 5
+          expr: sum(rate(http_requests_total{handler="/api/v1/portfolios", status=~"5.."}[5m])) / sum(rate(http_requests_total{handler="/api/v1/portfolio"}[5m])) * 100 > 5
           for: 5m
           labels:
             severity: critical
             team: backend
           annotations:
             summary: "포트폴리오 API 높은 오류율"
-            description: "포트폴리오 API의 오류율이 5분 동안 5%를 초과했습니다. 백엔드 로그와 성능을 확인하세요."
+            description: "포트폴리오 API의 오류율이 5분 동안 5%를 초과했습니다."
   
         - alert: GitHubActionsJobFailure
           expr: github_actions_workflow_job_status{status="failure"} > 0
