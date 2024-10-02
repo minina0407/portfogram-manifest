@@ -1,4 +1,3 @@
-# prometheus-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -79,7 +78,7 @@ data:
             target_label: kubernetes_namespace
           - source_labels: [__meta_kubernetes_service_name]
             target_label: kubernetes_name
-          
+      
       - job_name: 'node-exporter'
         kubernetes_sd_configs:
           - role: endpoints
@@ -93,112 +92,202 @@ data:
             target_label: kubernetes_namespace
           - source_labels: [__meta_kubernetes_service_name]
             target_label: kubernetes_name
-            
-            
+
   rules.yml: |
     groups:
-      - name: example
+      - name: kubernetes-apps
         rules:
-        - alert: AlwaysFiring
-          expr: vector(1)
-          labels:
-            severity: critical
-          annotations:
-            summary: This alert is always firing
-            description: This is a test alert that is always firing
-  
-        - alert: HighCPUUsage
-          expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
-          for: 5m
-          labels:
-            severity: warning
-            team: infrastructure
-          annotations:
-            summary: High CPU usage detected
-            description: CPU usage is above 80% on {{ $labels.instance }}
-  
-      - name: kubernetes-system-alerts
+          - alert: KubePodCrashLooping
+            expr: max_over_time(kube_pod_container_status_waiting_reason{job="kube-state-metrics",namespace=~".*",reason="CrashLoopBackOff"}[5m]) >= 1
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: Pod is crash looping
+              description: Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: "CrashLoopBackOff").
+          
+          - alert: KubePodNotReady
+            expr: sum by(namespace, pod) (max by(namespace, pod) (kube_pod_status_phase{job="kube-state-metrics",namespace=~".*",phase=~"Pending|Unknown"}) * on(namespace, pod) group_left(owner_kind) topk by(namespace, pod) (1, max by(namespace, pod, owner_kind) (kube_pod_owner{owner_kind!="Job"}))) > 0
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: Pod has been in a non-ready state for more than 15 minutes
+              description: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-ready state for longer than 15 minutes.
+          
+          - alert: KubeDeploymentReplicasMismatch
+            expr: (kube_deployment_spec_replicas{job="kube-state-metrics",namespace=~".*"} > kube_deployment_status_replicas_available{job="kube-state-metrics",namespace=~".*"}) and (changes(kube_deployment_status_replicas_updated{job="kube-state-metrics",namespace=~".*"}[10m]) == 0)
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: Deployment has not matched the expected number of replicas
+              description: Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has not matched the expected number of replicas for longer than 15 minutes.
+
+      - name: node-exporter
         rules:
-        - alert: EKSNodeNotReady
-          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
-          for: 5m
-          labels:
-            severity: critical
-          annotations:
-            summary: "EKS 노드 {{ $labels.node }} Ready 상태 아님"
-            description: "EKS 노드 {{ $labels.node }}가 5분 이상 Ready 상태가 아닙니다. AWS 콘솔에서 노드 상태를 확인하세요."
-  
-        - alert: OTelCollectorHighCPUUsage
-          expr: rate(process_cpu_seconds_total{job="otel-collector"}[5m]) > 0.8
-          for: 10m
-          labels:
-            severity: warning
-            team: observability
-          annotations:
-            summary: "OpenTelemetry Collector CPU 사용량 높음"
-            description: "OpenTelemetry Collector의 CPU 사용량이 10분 동안 80%를 초과했습니다. 수집기 구성을 최적화하거나 리소스를 늘리는 것을 고려하세요."
-  
-        - alert: LokiHighQueryLatency
-          expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{route="/loki/api/v1/query_range"}[5m])) by (le)) > 10
-          for: 15m
-          labels:
-            severity: warning
-            team: observability
-          annotations:
-            summary: "Loki 쿼리 지연 시간 높음"
-            description: "Loki 쿼리의 99번째 백분위 지연 시간이 15분 동안 10초를 초과했습니다. 로그 쿼리 최적화가 필요할 수 있습니다."
-  
-        - alert: RedisHighMemoryUsage
-          expr: redis_memory_used_bytes / redis_total_system_memory_bytes * 100 > 90
-          for: 15m
-          labels:
-            severity: warning
-            team: database
-          annotations:
-            summary: "Redis 메모리 사용량 높음"
-            description: "Redis 인스턴스의 메모리 사용량이 15분 동안 90%를 초과했습니다. 캐시 정책을 검토하거나 메모리를 증설하세요."
-  
-        - alert: EKSPodPending
-          expr: sum(kube_pod_status_phase{phase="Pending"}) > 5
-          for: 10m
-          labels:
-            severity: warning
-            team: infrastructure
-          annotations:
-            summary: "다수의 EKS Pod Pending 상태"
-            description: "10분 이상 5개 이상의 Pod가 Pending 상태입니다. EKS 노드 용량을 확인하고 필요시 Auto Scaling 설정을 조정하세요."
-  
-        - alert: HighErrorRatePortfolioAPI
-          expr: sum(rate(http_requests_total{handler="/api/v1/portfolios", status=~"5.."}[5m])) / sum(rate(http_requests_total{handler="/api/v1/portfolio"}[5m])) * 100 > 5
-          for: 5m
-          labels:
-            severity: critical
-            team: backend
-          annotations:
-            summary: "포트폴리오 API 높은 오류율"
-            description: "포트폴리오 API의 오류율이 5분 동안 5%를 초과했습니다."
-  
-        - alert: GitHubActionsJobFailure
-          expr: github_actions_workflow_job_status{status="failure"} > 0
-          for: 15m
-          labels:
-            severity: warning
-            team: devops
-          annotations:
-            summary: "GitHub Actions 작업 실패"
-            description: "GitHub Actions 작업 {{ $labels.job_name }}이(가) {{ $labels.workflow }} 워크플로우에서 실패했습니다. CI/CD 파이프라인을 점검하세요."
-        
-        - alert: TestWarning
-          expr: vector(1)
-          labels:
-            severity: warning
-          annotations:
-            summary: Test warning alert
-    
-        - alert: TestBackend
-          expr: vector(1)
-          labels:
-            severity: warning
-            team: backend
-          annotations:
-            summary: Test backend alert
+          - alert: HostOutOfMemory
+            expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: Host out of memory (instance {{ $labels.instance }})
+              description: "Node memory is filling up (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+          
+          - alert: HostHighCPULoad
+            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
+            for: 0m
+            labels:
+              severity: warning
+            annotations:
+              summary: Host high CPU load (instance {{ $labels.instance }})
+              description: "CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+          
+          - alert: HostOutOfDiskSpace
+            expr: (node_filesystem_avail_bytes{mountpoint="/"}  * 100) / node_filesystem_size_bytes{mountpoint="/"} < 10
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: Host out of disk space (instance {{ $labels.instance }})
+              description: "Disk space is filling up (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+      - name: alertmanager
+        rules:
+          - alert: AlertmanagerConfigurationReloadFailure
+            expr: alertmanager_config_last_reload_successful{job="datacenter-kube-prometheus-alertmanager",namespace="datacenter"} != 1
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              summary: Reloading an Alertmanager configuration has failed
+              description: Configuration has failed to load for {{ $labels.namespace }}/{{ $labels.pod}}.
+          
+          - alert: AlertmanagerFailedToSendAlerts
+            expr: (rate(alertmanager_notifications_failed_total{job="datacenter-kube-prometheus-alertmanager",namespace="datacenter"}[5m]) / rate(alertmanager_notifications_total{job="datacenter-kube-prometheus-alertmanager",namespace="datacenter"}[5m])) > 0.01
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: An Alertmanager instance failed to send notifications
+              description: Alertmanager {{ $labels.namespace }}/{{ $labels.pod}} failed to send {{ $value | humanizePercentage }} of notifications to {{ $labels.integration }}.
+
+      - name: prometheus
+        rules:
+          - alert: PrometheusBadConfig
+            expr: max_over_time(prometheus_config_last_reload_successful{job="datacenter-kube-prometheus-prometheus",namespace="datacenter"}[5m]) == 0
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              summary: Failed Prometheus configuration reload
+              description: Prometheus {{$labels.namespace}}/{{$labels.pod}} has failed to reload its configuration.
+          
+          - alert: PrometheusNotIngestingSamples
+            expr: (rate(prometheus_tsdb_head_samples_appended_total{job="datacenter-kube-prometheus-prometheus",namespace="datacenter"}[5m]) <= 0 and (sum without(scrape_job) (prometheus_target_metadata_cache_entries{job="datacenter-kube-prometheus-prometheus",namespace="datacenter"}) > 0 or sum without(rule_group) (prometheus_rule_group_rules{job="datacenter-kube-prometheus-prometheus",namespace="datacenter"}) > 0))
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: Prometheus is not ingesting samples
+              description: Prometheus {{$labels.namespace}}/{{$labels.pod}} is not ingesting samples.
+
+      - name: kubernetes-system
+        rules:
+          - alert: EKSNodeNotReady
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "EKS 노드 {{ $labels.node }} Ready 상태 아님"
+              description: "EKS 노드 {{ $labels.node }}가 5분 이상 Ready 상태가 아닙니다. AWS 콘솔에서 노드 상태를 확인하세요."
+          
+          - alert: KubeletTooManyPods
+            expr: kubelet_running_pod_count > 110
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: Kubelet is close to pod limit
+              description: "Kubelet {{ $labels.instance }} is running {{ $value }} pods, close to the limit of 110."
+
+      - name: custom-alerts
+        rules:
+          - alert: OTelCollectorHighCPUUsage
+            expr: rate(process_cpu_seconds_total{job="otel-collector"}[5m]) > 0.8
+            for: 10m
+            labels:
+              severity: warning
+              team: observability
+            annotations:
+              summary: "OpenTelemetry Collector CPU 사용량 높음"
+              description: "OpenTelemetry Collector의 CPU 사용량이 10분 동안 80%를 초과했습니다. 수집기 구성을 최적화하거나 리소스를 늘리는 것을 고려하세요."
+          
+          - alert: LokiHighQueryLatency
+            expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{route="/loki/api/v1/query_range"}[5m])) by (le)) > 10
+            for: 15m
+            labels:
+              severity: warning
+              team: observability
+            annotations:
+              summary: "Loki 쿼리 지연 시간 높음"
+              description: "Loki 쿼리의 99번째 백분위 지연 시간이 15분 동안 10초를 초과했습니다. 로그 쿼리 최적화가 필요할 수 있습니다."
+          
+          - alert: RedisHighMemoryUsage
+            expr: redis_memory_used_bytes / redis_total_system_memory_bytes * 100 > 90
+            for: 15m
+            labels:
+              severity: warning
+              team: database
+            annotations:
+              summary: "Redis 메모리 사용량 높음"
+              description: "Redis 인스턴스의 메모리 사용량이 15분 동안 90%를 초과했습니다. 캐시 정책을 검토하거나 메모리를 증설하세요."
+          
+          - alert: EKSPodPending
+            expr: sum(kube_pod_status_phase{phase="Pending"}) > 5
+            for: 10m
+            labels:
+              severity: warning
+              team: infrastructure
+            annotations:
+              summary: "다수의 EKS Pod Pending 상태"
+              description: "10분 이상 5개 이상의 Pod가 Pending 상태입니다. EKS 노드 용량을 확인하고 필요시 Auto Scaling 설정을 조정하세요."
+          
+          - alert: HighErrorRatePortfolioAPI
+            expr: sum(rate(http_requests_total{handler="/api/v1/portfolios", status=~"5.."}[5m])) / sum(rate(http_requests_total{handler="/api/v1/portfolio"}[5m])) * 100 > 5
+            for: 5m
+            labels:
+              severity: critical
+              team: backend
+            annotations:
+              summary: "포트폴리오 API 높은 오류율"
+              description: "포트폴리오 API의 오류율이 5분 동안 5%를 초과했습니다."
+          
+          - alert: GitHubActionsJobFailure
+            expr: github_actions_workflow_job_status{status="failure"} > 0
+            for: 15m
+            labels:
+              severity: warning
+              team: devops
+            annotations:
+              summary: "GitHub Actions 작업 실패"
+              description: "GitHub Actions 작업 {{ $labels.job_name }}이(가) {{ $labels.workflow }} 워크플로우에서 실패했습니다. CI/CD 파이프라인을 점검하세요."
+
+      - name: test-alerts
+        rules:
+          - alert: TestWarning
+            expr: vector(1)
+            labels:
+              severity: warning
+            annotations:
+              summary: Test warning alert
+          
+          - alert: TestBackend
+            expr: vector(1)
+            labels:
+              severity: warning
+              team: backend
+            annotations:
+              summary: Test backend alert
