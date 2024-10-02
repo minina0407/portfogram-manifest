@@ -10,6 +10,8 @@ spec:
   mode: deployment
   serviceAccount: otel-collector
   image: otel/opentelemetry-collector-contrib:0.80.0
+  args:
+    - "--config=/conf/collector.yaml"
   config: |
     receivers:
       otlp:
