@@ -132,7 +132,8 @@ data:
         {{- range .Labels.SortedPairs }}
         • *{{ .Name }}:* `{{ .Value }}`
         {{- end }}
-        {*Runbook:* {{ .Annotations.runbook_url }}
+        {{- if .Annotations.runbook_url }}
+        *Runbook:* {{ .Annotations.runbook_url }}
         {{- end }}
         {{- if .Annotations.grafana_url }}
         *Dashboard:* {{ .Annotations.grafana_url }}
@@ -141,4 +142,4 @@ data:
 
         *Job:* `{{ .CommonLabels.job }}`
         *Alert Source:* `{{ .CommonLabels.alertname }}`
-    {{- end }}{- if .Annotations.runbook_url }}
+    {{- end }}
