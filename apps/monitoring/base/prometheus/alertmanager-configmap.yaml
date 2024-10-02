@@ -7,10 +7,10 @@ data:
   alertmanager.yml: |
     global:
       slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
-      resolve_timeout: 5m
+      
 
     route:
-      receiver: 'slack-notifications'
+      receiver: 'slack-alerts'
       group_by: ['alertname', 'job', 'severity']
       group_wait: 30s
       group_interval: 5m
@@ -33,32 +33,11 @@ data:
         equal: ['alertname', 'job', 'instance']
 
     receivers:
-      - name: 'slack-notifications'
+      - name: 'slack-alerts'
         slack_configs:
           - channel: '#alerts'
             icon_url: https://avatars3.githubusercontent.com/u/3380462
-            username: 'AlertManager'
             send_resolved: true
-            title: '{{ template "slack.title" . }}'
-            text: '{{ template "slack.text" . }}'
-
-      - name: 'slack-critical'
-        slack_configs:
-          - channel: '#critical-alerts'
-            icon_url: https://avatars3.githubusercontent.com/u/3380462
-            username: 'AlertManager'
-            send_resolved: true
-            title: '{{ template "slack.title" . }}'
-            text: '{{ template "slack.text" . }}'
-
-      - name: 'slack-warnings'
-        slack_configs:
-          - channel: '#warning-alerts'
-            icon_url: https://avatars3.githubusercontent.com/u/3380462
-            username: 'AlertManager'
-            send_resolved: true
-            title: '{{ template "slack.title" . }}'
-            text: '{{ template "slack.text" . }}'
 
     templates:
       - '/etc/alertmanager/templates/*.tmpl'
