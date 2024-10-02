@@ -11,7 +11,7 @@ data:
 
     route:
       receiver: 'slack-alerts' # Default receiver
-      group_by: ['alertname', 'job', 'severity']
+      group_by: ['alertname', 'job']
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 4h
@@ -28,27 +28,28 @@ data:
         - match:
             team: infra
           receiver: 'slack-infra'
-          
+        - match_re:
+            alertname: .*
+          receiver: 'slack-alerts'
+    
     inhibit_rules:
       - source_match:
           severity: 'critical'
         target_match:
           severity: 'warning'
         equal: ['alertname', 'region']
-        
+    
     receivers:
-
       - name: 'slack-critical'
         slack_configs:
           - channel: '#critical-alerts'
             send_resolved: true
-            
-      - name: 'slack-warning' 
+      
+      - name: 'slack-warning'
         slack_configs:
           - channel: '#warning-alerts'
             send_resolved: true
-            
-
+      
       - name: 'slack-backend'
         slack_configs:
           - channel: '#backend-alerts'
@@ -58,25 +59,25 @@ data:
         slack_configs:
           - channel: '#infra-alerts'
             send_resolved: true
+      
       - name: 'slack-alerts'
         slack_configs:
           - channel: '#alerts'
             send_resolved: true
     
-    
-    
     templates:
       - '/etc/alertmanager/template.tmpl'
+
   template.tmpl: |
     {{ define "slack.default.title" }}
-    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }} - {{ .GroupLabels.job }}
+    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}{{ if .GroupLabels.job }} - {{ .GroupLabels.job }}{{ end }}
     {{ end }}
     
     {{ define "slack.default.text" }}
     :{{ if eq .Status "firing" }}warning{{ else }}white_check_mark{{ end }}: *{{ .Status | toUpper }}*: {{ .GroupLabels.alertname }}
-    *Job:* {{ .GroupLabels.job }}
-    *Severity:* {{ .CommonLabels.severity }}
-    *Team:* {{ .CommonLabels.team }}
+    {{ if .GroupLabels.job }}*Job:* {{ .GroupLabels.job }}{{ end }}
+    {{ if .CommonLabels.severity }}*Severity:* {{ .CommonLabels.severity }}{{ else }}*Severity:* Not specified{{ end }}
+    {{ if .CommonLabels.team }}*Team:* {{ .CommonLabels.team }}{{ else }}*Team:* Not specified{{ end }}
     
     {{ if .CommonAnnotations.summary }}*Summary:* {{ .CommonAnnotations.summary }}{{ end }}
     {{ if .CommonAnnotations.description }}*Description:* {{ .CommonAnnotations.description }}{{ end }}
@@ -84,14 +85,14 @@ data:
     {{ if gt (len .Alerts.Firing) 0 }}
     *Alerts Firing:*
     {{ range .Alerts.Firing }}
-      • {{ .Labels.instance }}: {{ .Annotations.description }}
+      • {{ if .Labels.instance }}{{ .Labels.instance }}: {{ end }}{{ .Annotations.description }}
     {{ end }}
     {{ end }}
     
     {{ if gt (len .Alerts.Resolved) 0 }}
     *Alerts Resolved:*
     {{ range .Alerts.Resolved }}
-      • {{ .Labels.instance }}: {{ .Annotations.description }}
+      • {{ if .Labels.instance }}{{ .Labels.instance }}: {{ end }}{{ .Annotations.description }}
     {{ end }}
     {{ end }}
     
