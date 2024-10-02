@@ -1,3 +1,4 @@
+#alertmanager-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,84 +8,82 @@ data:
   alertmanager.yml: |
     global:
       slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
-      
 
     route:
-      receiver: 'slack-alerts'
-      group_by: ['alertname', 'job', 'severity']
+      receiver: 'slack-alerts' # Default receiver
+      group_by: ['alertname', 'job']
       group_wait: 30s
       group_interval: 5m
-      repeat_interval: 4h
+      repeat_interval: 3h
       routes:
-        - receiver: 'slack-critical'
-          match:
+        - match:
             severity: critical
+          receiver: 'slack-critical'
           continue: true
-        - receiver: 'slack-warnings'
-          match:
-            severity: warning
+        - match:
+            severity: waring
+          receiver: 'slack-warning'
           continue: true
-
+        - match:
+            team: backend
+          receiver: 'slack-backend'
+    
     inhibit_rules:
       - source_match:
           severity: 'critical'
         target_match:
           severity: 'warning'
-        equal: ['alertname', 'job', 'instance']
-
+        equal: ['alertname', 'region']
+    
     receivers:
       - name: 'slack-alerts'
         slack_configs:
           - channel: '#alerts'
-            icon_url: https://avatars3.githubusercontent.com/u/3380462
+            send_resolved: true
+      - name: 'slack-critical'
+        slack_configs:
+          - channel: '#critical-alerts'
+            send_resolved: true
+      - name: 'slack-warning'
+        slack_configs:
+          - channel: '#warning-alerts'
+            send_resolved: true
+      - name: 'slack-backend'
+        slack_configs:
+          - channel: '#backend-alerts'
             send_resolved: true
 
     templates:
-      - '/etc/alertmanager/templates/*.tmpl'
-
-  slack.tmpl: |
-    {{ define "slack.title" }}
-    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+      - '/etc/alertmanager/template.tmpl'
+  template.tmpl: |
+    {{ define "slack.default.title" }}
+    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
     {{ end }}
-
-    {{ define "slack.text" }}
-    {{ template "__alert_severity" . }}
-    {{- if .CommonLabels.cluster }}
-    *Cluster:* `{{ .CommonLabels.cluster }}`
-    {{- end }}
-    *Alert:* {{ .CommonLabels.alertname }}
+    
+    {{ define "slack.default.text" }}
+    :{{ if eq .Status "firing" }}fire_engine{{ else }}green_heart{{ end }}: *{{ .Status | toUpper }}*: {{ .GroupLabels.alertname }}
+    {{ .CommonAnnotations.summary }}
+    
     *Description:* {{ .CommonAnnotations.description }}
-    *Details:*
-        {{ range .Alerts -}}
-        • {{ .Annotations.summary }}
-        {{ end }}
-    *Runbook:* {{ .CommonAnnotations.runbook }}
-    {{- if eq .Status "firing" }}
-    *Graph:* :grafana: - {{ .CommonAnnotations.dashboard }}
-    *Silence:* :no_bell: - {{ template "__alert_silence_link" . }}
+    *Severity:* {{ .CommonLabels.severity }}
+    *Job:* {{ .CommonLabels.job }}
+    
+    {{ if gt (len .Alerts.Firing) 0 }}
+    *Alerts Firing:*
+    {{ range .Alerts.Firing }}
+      • {{ .Annotations.description }}
     {{ end }}
     {{ end }}
-
-    {{ define "__alert_severity" -}}
-        {{- if eq .Status "firing" -}}
-            {{- if eq .Labels.severity "critical" -}}
-                *Severity:* 🔴 Critical
-            {{- else if eq .Labels.severity "warning" -}}
-                *Severity:* 🟠 Warning
-            {{- else -}}
-                *Severity:* 🟣 {{ .Labels.severity }}
-            {{- end -}}
-        {{- else -}}
-            *Severity:* ✅ Resolved
-        {{- end }}
-    {{- end }}
-
-    {{ define "__alert_silence_link" -}}
-        {{ .ExternalURL }}/#/silences/new?filter=%7B
-        {{- range .Labels.SortedPairs -}}
-            {{- if ne .Name "alertname" -}}
-                {{- .Name }}%3D"{{- .Value -}}"%2C%20
-            {{- end -}}
-        {{- end -}}
-        alertname%3D"{{ .Labels.alertname }}"%7D
-    {{- end }}
+    
+    {{ if gt (len .Alerts.Resolved) 0 }}
+    *Alerts Resolved:*
+    {{ range .Alerts.Resolved }}
+      • {{ .Annotations.description }}
+    {{ end }}
+    {{ end }}
+    
+    *Runbook:* {{ .CommonAnnotations.runbook_url }}
+    *Grafana:* {{ .CommonAnnotations.grafana_url }}
+    {{ end }}      
+      
+      
