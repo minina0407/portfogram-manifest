@@ -10,7 +10,7 @@ data:
       resolve_timeout: 5m
 
     route:
-      receiver: 'slack-alerts' # Default receiver
+      receiver: 'slack-alerts'
       group_by: ['alertname', 'job']
       group_wait: 30s
       group_interval: 5m
@@ -81,9 +81,9 @@ data:
             text: '{{ template "slack.text" . }}'
 
     templates:
-      - '/etc/alertmanager/templates/*.tmpl'
+      - '/etc/alertmanager/templates.tmpl'
 
-  template.tmpl: |
+  templates.tmpl: |
     {{/* Alertmanager Silence link */}}
     {{ define "__alert_silence_link" -}}
         {{ .ExternalURL }}/#/silences/new?filter=%7B
@@ -132,7 +132,6 @@ data:
 
     {{/* The text to display in the alert */}}
     {{ define "slack.text" -}}
-
         {{ template "__alert_severity" . }}
         {{- if (index .Alerts 0).Annotations.summary }}
         {{- "\n" -}}
@@ -140,7 +139,6 @@ data:
         {{- end }}
 
         {{ range .Alerts }}
-
             {{- if .Annotations.description }}
             {{- "\n" -}}
             {{ .Annotations.description }}
@@ -151,7 +149,5 @@ data:
             {{ .Annotations.message }}
             {{- "\n" -}}
             {{- end }}
-
         {{- end }}
-
     {{- end }}
