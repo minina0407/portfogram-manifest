@@ -45,9 +45,7 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/alertmanager
-            - name: alertmanager-secrets
-              mountPath: /etc/alertmanager/secrets
-              readOnly: true
+
             - name: slack-token
               mountPath: /etc/alertmanager/secrets
               readOnly: true
