@@ -45,8 +45,7 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/alertmanager
-
-            - name: slack-token
+            - name: alertmanager-secrets
               mountPath: /etc/alertmanager/secrets
               readOnly: true
             - name: storage-volume
@@ -60,12 +59,6 @@ spec:
             secretName: alertmanager-secrets
         - name: storage-volume
           emptyDir: {}
-        - name: slack-token
-          secret:
-            secretName: slack-app-token
-            items:
-              - key: token
-                path: slack_token
 ---
 apiVersion: bitnami.com/v1alpha1
 kind: SealedSecret

@@ -7,116 +7,144 @@ metadata:
 data:
   alertmanager.yml: |
     global:
-      resolve_timeout: 5m
+      slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
 
     route:
-      receiver: 'slack-alerts'
-      group_by: ['alertname']
+      receiver: 'slack-notifications'
+      group_by: ['alertname', 'job', 'severity']
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 4h
       routes:
-        - match:
+        - receiver: 'slack-critical'
+          match:
             severity: critical
-          receiver: 'slack-critical'
-        - match:
+          continue: true
+        - receiver: 'slack-warnings'
+          match:
             severity: warning
-          receiver: 'slack-warning'
-        - match:
-            team: backend
-          receiver: 'slack-backend'
-        - match:
-            team: infra
-          receiver: 'slack-infra'
-
-    inhibit_rules:
-      - source_match:
-          severity: 'critical'
-        target_match:
-          severity: 'warning'
-        equal: ['alertname']
-    
-    receivers:
-      - name: 'slack-critical'
-        slack_configs:
-          - api_url: 'https://slack.com/api/chat.postMessage'
-            channel: '#critical-alerts'
-            send_resolved: true
-            http_config:
-              authorization:
-                type: Bearer
-                credentials_file: /etc/alertmanager/secrets/slack_token
-      
-      - name: 'slack-warning'
-        slack_configs:
-          - api_url: 'https://slack.com/api/chat.postMessage'
-            channel: '#warning-alerts'
-            send_resolved: true
-            http_config:
-              authorization:
-                type: Bearer
-                credentials_file: /etc/alertmanager/secrets/slack_token
-      
-      - name: 'slack-backend'
-        slack_configs:
-          - api_url: 'https://slack.com/api/chat.postMessage'
-            channel: '#backend-alerts'
-            send_resolved: true
-            http_config:
-              authorization:
-                type: Bearer
-                credentials_file: /etc/alertmanager/secrets/slack_token
-
-      - name: 'slack-infra'
-        slack_configs:
-          - api_url: 'https://slack.com/api/chat.postMessage'
-            channel: '#infra-alerts'
-            send_resolved: true
-            http_config:
-              authorization:
-                type: Bearer
-                credentials_file: /etc/alertmanager/secrets/slack_token
-      
-      - name: 'slack-alerts'
-        slack_configs:
-          - api_url: 'https://slack.com/api/chat.postMessage'
-            channel: '#alerts'
-            send_resolved: true
-            http_config:
-              authorization:
-                type: Bearer
-                credentials_file: /etc/alertmanager/secrets/slack_token
-    
-    templates:
-      - '/etc/alertmanager/template/*.tmpl'
-  template.tmpl: |
-    {{ define "slack.default.title" }}
-    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }} - {{ .GroupLabels.job }}
-    {{ end }}
-    
-    {{ define "slack.default.text" }}
-    :{{ if eq .Status "firing" }}warning{{ else }}white_check_mark{{ end }}: *{{ .Status | toUpper }}*: {{ .GroupLabels.alertname }}
-    *Job:* {{ .GroupLabels.job }}
-    *Severity:* {{ .CommonLabels.severity }}
-    *Team:* {{ .CommonLabels.team }}
-    
-    {{ if .CommonAnnotations.summary }}*Summary:* {{ .CommonAnnotations.summary }}{{ end }}
-    {{ if .CommonAnnotations.description }}*Description:* {{ .CommonAnnotations.description }}{{ end }}
-    
-    {{ if gt (len .Alerts.Firing) 0 }}
-    *Alerts Firing:*
-    {{ range .Alerts.Firing }}
-      • {{ .Labels.instance }}: {{ .Annotations.description }}
-    {{ end }}
-    {{ end }}
-    
-    {{ if gt (len .Alerts.Resolved) 0 }}
-    *Alerts Resolved:*
-    {{ range .Alerts.Resolved }}
-      • {{ .Labels.instance }}: {{ .Annotations.description }}
-    {{ end }}
-    {{ end }}
-    
-    {{ if .CommonAnnotations.runbook_url }}*Runbook:* {{ .CommonAnnotations.runbook_url }}{{ end }}
-    {{ if .CommonAnnotations.dashboard_url }}*Dashboard:* {{ .CommonAnnotations.dashboard_url }}{{ end }}
-    {{ end }}
+          continue: true
+  
+      inhibit_rules:
+        - source_match:
+            severity: 'critical'
+          target_match:
+            severity: 'warning'
+          equal: ['alertname', 'job', 'instance']
+  
+      receivers:
+        - name: 'slack-notifications'
+          slack_configs:
+            - channel: '#alerts'
+              icon_url: https://avatars3.githubusercontent.com/u/3380462
+              username: 'AlertManager'
+              send_resolved: true
+              title: '{{ template "slack.title" . }}'
+              text: '{{ template "slack.text" . }}'
+              actions:
+                - type: button
+                  text: 'Runbook :green_book:'
+                  url: '{{ (index .Alerts 0).Annotations.runbook }}'
+                - type: button
+                  text: 'Query :mag:'
+                  url: '{{ (index .Alerts 0).GeneratorURL }}'
+                - type: button
+                  text: 'Dashboard :grafana:'
+                  url: '{{ (index .Alerts 0).Annotations.dashboard }}'
+                - type: button
+                  text: 'Silence :no_bell:'
+                  url: '{{ template "__alert_silence_link" . }}'
+  
+        - name: 'slack-critical'
+          slack_configs:
+            - channel: '#critical-alerts'
+              icon_url: https://avatars3.githubusercontent.com/u/3380462
+              username: 'AlertManager'
+              send_resolved: true
+              title: '{{ template "slack.title" . }}'
+              text: '{{ template "slack.text" . }}'
+              actions:
+                - type: button
+                  text: 'Runbook :green_book:'
+                  url: '{{ (index .Alerts 0).Annotations.runbook }}'
+                - type: button
+                  text: 'Query :mag:'
+                  url: '{{ (index .Alerts 0).GeneratorURL }}'
+                - type: button
+                  text: 'Dashboard :grafana:'
+                  url: '{{ (index .Alerts 0).Annotations.dashboard }}'
+                - type: button
+                  text: 'Silence :no_bell:'
+                  url: '{{ template "__alert_silence_link" . }}'
+  
+        - name: 'slack-warnings'
+          slack_configs:
+            - channel: '#warning-alerts'
+              icon_url: https://avatars3.githubusercontent.com/u/3380462
+              username: 'AlertManager'
+              send_resolved: true
+              title: '{{ template "slack.title" . }}'
+              text: '{{ template "slack.text" . }}'
+              actions:
+                - type: button
+                  text: 'Runbook :green_book:'
+                  url: '{{ (index .Alerts 0).Annotations.runbook }}'
+                - type: button
+                  text: 'Query :mag:'
+                  url: '{{ (index .Alerts 0).GeneratorURL }}'
+                - type: button
+                  text: 'Dashboard :grafana:'
+                  url: '{{ (index .Alerts 0).Annotations.dashboard }}'
+                - type: button
+                  text: 'Silence :no_bell:'
+                  url: '{{ template "__alert_silence_link" . }}'
+  
+      templates:
+        - '/etc/alertmanager/template/*.tmpl'
+  
+    slack.tmpl: |
+      {{ define "__alert_severity" -}}
+          {{- if eq .Status "firing" -}}
+              {{- if eq .Labels.severity "critical" -}}
+                  *Severity:* 🔴 Critical
+              {{- else if eq .Labels.severity "warning" -}}
+                  *Severity:* 🟠 Warning
+              {{- else -}}
+                  *Severity:* 🟣 {{ .Labels.severity }}
+              {{- end -}}
+          {{- else -}}
+              *Severity:* ✅ Resolved
+          {{- end }}
+      {{- end }}
+  
+      {{ define "__alert_silence_link" -}}
+          {{ .ExternalURL }}/#/silences/new?filter=%7B
+          {{- range .Labels.SortedPairs -}}
+              {{- if ne .Name "alertname" -}}
+                  {{- .Name }}%3D"{{- .Value -}}"%2C%20
+              {{- end -}}
+          {{- end -}}
+          alertname%3D"{{ .Labels.alertname }}"%7D
+      {{- end }}
+  
+      {{ define "slack.title" -}}
+          [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+      {{- end }}
+  
+      {{ define "slack.text" -}}
+      {{ template "__alert_severity" . }}
+      {{- if .CommonLabels.cluster }}
+      *Cluster:* `{{ .CommonLabels.cluster }}`
+      {{- end }}
+      *Alert:* {{ .CommonLabels.alertname }}
+      *Description:* {{ .CommonAnnotations.description }}
+      *Details:*
+          {{ range .Alerts -}}
+          • {{ .Annotations.summary }}
+          {{ end }}
+      *Runbook:* {{ .CommonAnnotations.runbook }}
+      {{- if eq .Status "firing" }}
+      *Graph:* :grafana: - {{ .CommonAnnotations.dashboard }}
+      *Silence:* :no_bell: - {{ template "__alert_silence_link" . }}
+      {{ end }}
+      {{- end }}
