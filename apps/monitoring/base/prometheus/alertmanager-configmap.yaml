@@ -45,7 +45,6 @@ data:
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
             footer: 'Alertmanager'
-            parse: 'full'
       
       - name: 'slack-critical'
         slack_configs:
@@ -56,7 +55,6 @@ data:
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
             footer: 'Alertmanager'
-            parse: 'full'
 
       - name: 'slack-warning'
         slack_configs:
@@ -67,7 +65,6 @@ data:
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
             footer: 'Alertmanager'
-            parse: 'full'
 
       - name: 'slack-backend'
         slack_configs:
@@ -78,7 +75,6 @@ data:
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
             footer: 'Alertmanager'
-            parse: 'full'
 
     templates:
       - '/etc/alertmanager/templates.tmpl'
@@ -148,12 +144,12 @@ data:
         • *{{ .Name }}:* `{{ .Value }}`
         {{- end }}
         {{- if .Annotations.runbook_url }}
-        *Runbook:* <{{ .Annotations.runbook_url }}|:green_book: View Runbook>
+        *Runbook:* {{ .Annotations.runbook_url }}
         {{- end }}
         {{- if .Annotations.grafana_url }}
-        *Dashboard:* <{{ .Annotations.grafana_url }}|:bar_chart: View in Grafana>
+        *Dashboard:* {{ .Annotations.grafana_url }}
         {{- end }}
-        *Silence:* <{{ template "__alert_silence_link" . }}|:no_bell: Silence Alert>
+        *Silence:* {{ template "__alert_silence_link" . }}
         {{- end }}
 
         *Job:* `{{ .CommonLabels.job }}`
