@@ -1,74 +1,111 @@
-# alertmanager-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: alertmanager
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: alertmanager
-  template:
-    metadata:
-      labels:
-        app: alertmanager
-    spec:
-      containers:
-        - name: alertmanager
-          image: prom/alertmanager:v0.27.0
-          args:
-            - "--config.file=/etc/alertmanager/alertmanager.yml"
-            - "--storage.path=/alertmanager"
-          ports:
-            - containerPort: 9093
-          readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: 9093
-            initialDelaySeconds: 30
-            periodSeconds: 5
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: /-/healthy
-              port: 9093
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            failureThreshold: 3
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 200m
-              memory: 256Mi
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/alertmanager
-            - name: alertmanager-secrets
-              mountPath: /etc/alertmanager/secrets
-              readOnly: true
-            - name: storage-volume
-              mountPath: /alertmanager
-      volumes:
-        - name: config-volume
-          configMap:
-            name: alertmanager-config
-        - name: alertmanager-secrets
-          secret:
-            secretName: alertmanager-secrets
-        - name: storage-volume
-          emptyDir: {}
----
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
-metadata:
-  name: alertmanager-secrets
+  name: alertmanager-config
   namespace: observability
-spec:
-  encryptedData:
-    slack_api_url: AgBhYtnOEYDc2uQ4zyWket4sp6wkbK6jRTsjFopFIBG/Rk/N1mP+WUpxHAdweyycz/oqWfOU+nA0/eAjDJBZ6OADrfq/ASZRmJfLZBVElUhAuQA0WzRDBYpcy5K2ANqJWcLA6n7bcGTwvBz6w1Ob+xUGWyCgMUDGjEFaenXivbQdXz7Vh+VTxGobZjXegl/4jsDcIlx/fycJzXb3iU1k+JL4sfIqXcO6ymyXDLbtu7PCFMkREQ1G47CazR8fH7mLKhxpqgeUu6/b+pgYIaOJG/pEpDPIgJoWGdI5fSAfKT8OQ0vkVSIIjodUvKtaxMPMD27wH1dnZeyXzvM+AJKo7ZQezt2XDcYkNMg3kcCxVXjgXOggEAoinbnWUIvE3CpjRyCdaNbvw6nyChNmCiI8J6nI38s1pWmmQj7f7bUo4iPW+1w2QAlA62v5kGYoQ8CrzGF5H/Ue5f7toCt6bYL4fQvsnBg/4Yfn9LyXTVODtU6N+LE+ChlVzyIBPmFCtxJoqp/OmZCaxTobwREZksZP2aXMfRpMtZgA6KKfsWF/gL8y2ywclnTQd/PTrGRQVOs5QQkEYspLJ4rVzMLEGcDWnaR+GXpGOehf5Sy7n5TsDDvxlZQ3boC0P3Im50oI5KzAy32L971T5LFeaVqDyLGVA4niCiW8eGgNpdOmaLpUbfJxTeH9CvWApmyE5nt84SgI4eba9XHr4zZJXlhO4Ds9jWIrt3WLpZxwxOiDf46yr46pLyIc7OZ10RkLytNc8NyHx73hPy1R9AoTpJAcBIarpFMYgdPiiAiGNtSuZz3GrdeC53A=
-  template:
-    metadata:
-      name: alertmanager-secrets
-      namespace: observability
+data:
+  alertmanager.yml: |
+    global:
+      slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
+      resolve_timeout: 5m
+
+    route:
+      receiver: 'slack-notifications'
+      group_by: ['alertname', 'job', 'severity']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      routes:
+        - receiver: 'slack-critical'
+          match:
+            severity: critical
+          continue: true
+        - receiver: 'slack-warnings'
+          match:
+            severity: warning
+          continue: true
+
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'job', 'instance']
+
+    receivers:
+      - name: 'slack-notifications'
+        slack_configs:
+          - channel: '#alerts'
+            icon_url: https://avatars3.githubusercontent.com/u/3380462
+            username: 'AlertManager'
+            send_resolved: true
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+
+      - name: 'slack-critical'
+        slack_configs:
+          - channel: '#critical-alerts'
+            icon_url: https://avatars3.githubusercontent.com/u/3380462
+            username: 'AlertManager'
+            send_resolved: true
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+
+      - name: 'slack-warnings'
+        slack_configs:
+          - channel: '#warning-alerts'
+            icon_url: https://avatars3.githubusercontent.com/u/3380462
+            username: 'AlertManager'
+            send_resolved: true
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+
+    templates:
+      - '/etc/alertmanager/templates/*.tmpl'
+
+  slack.tmpl: |
+    {{ define "slack.title" }}
+    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+    {{ end }}
+
+    {{ define "slack.text" }}
+    {{ template "__alert_severity" . }}
+    {{- if .CommonLabels.cluster }}
+    *Cluster:* `{{ .CommonLabels.cluster }}`
+    {{- end }}
+    *Alert:* {{ .CommonLabels.alertname }}
+    *Description:* {{ .CommonAnnotations.description }}
+    *Details:*
+        {{ range .Alerts -}}
+        • {{ .Annotations.summary }}
+        {{ end }}
+    *Runbook:* {{ .CommonAnnotations.runbook }}
+    {{- if eq .Status "firing" }}
+    *Graph:* :grafana: - {{ .CommonAnnotations.dashboard }}
+    *Silence:* :no_bell: - {{ template "__alert_silence_link" . }}
+    {{ end }}
+    {{ end }}
+
+    {{ define "__alert_severity" -}}
+        {{- if eq .Status "firing" -}}
+            {{- if eq .Labels.severity "critical" -}}
+                *Severity:* 🔴 Critical
+            {{- else if eq .Labels.severity "warning" -}}
+                *Severity:* 🟠 Warning
+            {{- else -}}
+                *Severity:* 🟣 {{ .Labels.severity }}
+            {{- end -}}
+        {{- else -}}
+            *Severity:* ✅ Resolved
+        {{- end }}
+    {{- end }}
+
+    {{ define "__alert_silence_link" -}}
+        {{ .ExternalURL }}/#/silences/new?filter=%7B
+        {{- range .Labels.SortedPairs -}}
+            {{- if ne .Name "alertname" -}}
+                {{- .Name }}%3D"{{- .Value -}}"%2C%20
+            {{- end -}}
+        {{- end -}}
+        alertname%3D"{{ .Labels.alertname }}"%7D
+    {{- end }}
