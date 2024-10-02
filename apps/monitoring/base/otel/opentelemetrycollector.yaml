@@ -11,7 +11,7 @@ spec:
   serviceAccount: otel-collector
   image: otel/opentelemetry-collector-contrib:0.80.0
   args:
-    - "--feature-gates=+component.UseLocalHostAsDefaultHost=false"
+    feature-gates: "+component.UseLocalHostAsDefaultHost=false"
   podDisruptionBudget:
     maxUnavailable: 1
   config: |
