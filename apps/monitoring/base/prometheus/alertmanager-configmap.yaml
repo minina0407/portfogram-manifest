@@ -100,9 +100,31 @@ data:
                 url: '{{ template "__alert_silence_link" . }}'
 
     templates:
-      - '/etc/alertmanager/templates/*.tmpl'
+      - '/etc/alertmanager/templates/slack.tmpl'
 
-  templates.tmpl: |
+  slack.tmpl: |
+    {{ define "slack.title" }}
+    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+    {{ end }}
+
+    {{ define "slack.text" }}
+    {{ template "__alert_severity" . }}
+    {{- if .CommonLabels.cluster }}
+    *Cluster:* `{{ .CommonLabels.cluster }}`
+    {{- end }}
+    *Alert:* {{ .CommonLabels.alertname }}
+    *Description:* {{ .CommonAnnotations.description }}
+    *Details:*
+        {{ range .Alerts -}}
+        • {{ .Annotations.summary }}
+        {{ end }}
+    *Runbook:* {{ .CommonAnnotations.runbook }}
+    {{- if eq .Status "firing" }}
+    *Graph:* :grafana: - {{ .CommonAnnotations.dashboard }}
+    *Silence:* :no_bell: - {{ template "__alert_silence_link" . }}
+    {{ end }}
+    {{ end }}
+
     {{ define "__alert_severity" -}}
         {{- if eq .Status "firing" -}}
             {{- if eq .Labels.severity "critical" -}}
@@ -125,26 +147,4 @@ data:
             {{- end -}}
         {{- end -}}
         alertname%3D"{{ .Labels.alertname }}"%7D
-    {{- end }}
-
-    {{ define "slack.title" -}}
-        [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
-    {{- end }}
-
-    {{ define "slack.text" -}}
-    {{ template "__alert_severity" . }}
-    {{- if .CommonLabels.cluster }}
-    *Cluster:* `{{ .CommonLabels.cluster }}`
-    {{- end }}
-    *Alert:* {{ .CommonLabels.alertname }}
-    *Description:* {{ .CommonAnnotations.description }}
-    *Details:*
-        {{ range .Alerts -}}
-        • {{ .Annotations.summary }}
-        {{ end }}
-    *Runbook:* {{ .CommonAnnotations.runbook }}
-    {{- if eq .Status "firing" }}
-    *Graph:* :grafana: - {{ .CommonAnnotations.dashboard }}
-    *Silence:* :no_bell: - {{ template "__alert_silence_link" . }}
-    {{ end }}
     {{- end }}
