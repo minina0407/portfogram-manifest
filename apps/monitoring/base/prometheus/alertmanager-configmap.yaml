@@ -21,7 +21,7 @@ data:
           receiver: 'slack-critical'
           continue: true
         - match:
-            severity: warning  # 수정: 'waring'에서 'warning'으로 변경
+            severity: warning
           receiver: 'slack-warning'
           continue: true
         - match:
@@ -41,26 +41,26 @@ data:
           - channel: '#alerts'
             send_resolved: true
             icon_emoji: '{{ if eq .Status "firing" }}:fire:{{ else }}:ok:{{ end }}'
-            color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+            color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
             actions:
               - type: button
                 text: 'Runbook :green_book:'
-                url: '{{ .CommonAnnotations.runbook_url }}'
+                url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
               - type: button
-                text: 'Grafana'
-                url: '{{ .CommonAnnotations.grafana_url }}'
+                text: 'Grafana :grafana:'
+                url: '{{ (index .Alerts 0).Annotations.grafana_url }}'
               - type: button
                 text: 'Silence :no_bell:'
-                url: '{{ .ExternalURL }}/#/silences'
+                url: '{{ template "__alert_silence_link" . }}'
       
       - name: 'slack-critical'
         slack_configs:
           - channel: '#critical-alerts'
             send_resolved: true
             icon_emoji: '{{ if eq .Status "firing" }}:fire:{{ else }}:ok:{{ end }}'
-            color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+            color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
       - name: 'slack-warning'
@@ -68,7 +68,7 @@ data:
           - channel: '#warning-alerts'
             send_resolved: true
             icon_emoji: '{{ if eq .Status "firing" }}:warning:{{ else }}:ok:{{ end }}'
-            color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+            color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
       - name: 'slack-backend'
@@ -76,7 +76,7 @@ data:
           - channel: '#backend-alerts'
             send_resolved: true
             icon_emoji: '{{ if eq .Status "firing" }}:computer:{{ else }}:ok:{{ end }}'
-            color: '{{ if eq .Status "firing" }}#ADD8E6{{ else }}good{{ end }}'
+            color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
 
@@ -84,32 +84,74 @@ data:
       - '/etc/alertmanager/templates/*.tmpl'
 
   template.tmpl: |
-    {{ define "slack.title" }}
-    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
-    {{ end }}
-    
-    {{ define "slack.text" }}
-    {{ if eq .Status "firing" }}:fire_engine:{{ else }}:green_heart:{{ end }} *{{ .Status | toUpper }}*: {{ .GroupLabels.alertname }}
-    {{ .CommonAnnotations.summary }}
-    
-    *Description:* {{ .CommonAnnotations.description }}
-    *Severity:* {{ .CommonLabels.severity }}
-    *Job:* {{ .CommonLabels.job }}
-    
-    {{ if gt (len .Alerts.Firing) 0 }}
-    *Alerts Firing:*
-    {{ range .Alerts.Firing }}
-      • {{ .Annotations.description }}
-    {{ end }}
-    {{ end }}
-    
-    {{ if gt (len .Alerts.Resolved) 0 }}
-    *Alerts Resolved:*
-    {{ range .Alerts.Resolved }}
-      • {{ .Annotations.description }}
-    {{ end }}
-    {{ end }}
-    
-    *Runbook:* {{ .CommonAnnotations.runbook_url }}
-    *Grafana:* {{ .CommonAnnotations.grafana_url }}
-    {{ end }}
+    {{/* Alertmanager Silence link */}}
+    {{ define "__alert_silence_link" -}}
+        {{ .ExternalURL }}/#/silences/new?filter=%7B
+        {{- range .CommonLabels.SortedPairs -}}
+            {{- if ne .Name "alertname" -}}
+                {{- .Name }}%3D"{{- .Value -}}"%2C%20
+            {{- end -}}
+        {{- end -}}
+        alertname%3D"{{- .CommonLabels.alertname -}}"%7D
+    {{- end }}
+
+    {{/* Severity of the alert */}}
+    {{ define "__alert_severity" -}}
+        {{- if eq .CommonLabels.severity "critical" -}}
+        *Severity:* `Critical`
+        {{- else if eq .CommonLabels.severity "warning" -}}
+        *Severity:* `Warning`
+        {{- else if eq .CommonLabels.severity "info" -}}
+        *Severity:* `Info`
+        {{- else -}}
+        *Severity:* :question: {{ .CommonLabels.severity }}
+        {{- end }}
+    {{- end }}
+
+    {{/* Title of the Slack alert */}}
+    {{ define "slack.title" -}}
+      [{{ .Status | toUpper -}}
+      {{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{- end -}}
+      ] {{ .CommonLabels.alertname }}
+    {{- end }}
+
+    {{/* Color of Slack attachment (appears as line next to alert )*/}}
+    {{ define "slack.color" -}}
+        {{ if eq .Status "firing" -}}
+            {{ if eq .CommonLabels.severity "warning" -}}
+                warning
+            {{- else if eq .CommonLabels.severity "critical" -}}
+                danger
+            {{- else -}}
+                #439FE0
+            {{- end -}}
+        {{ else -}}
+        good
+        {{- end }}
+    {{- end }}
+
+    {{/* The text to display in the alert */}}
+    {{ define "slack.text" -}}
+
+        {{ template "__alert_severity" . }}
+        {{- if (index .Alerts 0).Annotations.summary }}
+        {{- "\n" -}}
+        *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+        {{- end }}
+
+        {{ range .Alerts }}
+
+            {{- if .Annotations.description }}
+            {{- "\n" -}}
+            {{ .Annotations.description }}
+            {{- "\n" -}}
+            {{- end }}
+            {{- if .Annotations.message }}
+            {{- "\n" -}}
+            {{ .Annotations.message }}
+            {{- "\n" -}}
+            {{- end }}
+
+        {{- end }}
+
+    {{- end }}
