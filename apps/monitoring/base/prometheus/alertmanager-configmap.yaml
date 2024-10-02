@@ -5,7 +5,79 @@ metadata:
   namespace: observability
 data:
   alertmanager.yml: |
-    # (이전 alertmanager.yml 내용은 그대로 유지)
+    global:
+      slack_api_url_file: /etc/alertmanager/secrets/slack_api_url
+      resolve_timeout: 5m
+
+    route:
+      receiver: 'slack-alerts'
+      group_by: ['alertname', 'job']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 3h
+      routes:
+        - match:
+            severity: critical
+          receiver: 'slack-critical'
+          continue: true
+        - match:
+            severity: warning
+          receiver: 'slack-warning'
+          continue: true
+        - match:
+            team: backend
+          receiver: 'slack-backend'
+    
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'region']
+    
+    receivers:
+      - name: 'slack-alerts'
+        slack_configs:
+          - channel: '#alerts'
+            send_resolved: true
+            icon_emoji: '{{ if eq .Status "firing" }}:fire:{{ else }}:ok:{{ end }}'
+            color: '{{ template "slack.color" . }}'
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+            footer: 'Alertmanager'
+      
+      - name: 'slack-critical'
+        slack_configs:
+          - channel: '#critical-alerts'
+            send_resolved: true
+            icon_emoji: '{{ if eq .Status "firing" }}:fire:{{ else }}:ok:{{ end }}'
+            color: '{{ template "slack.color" . }}'
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+            footer: 'Alertmanager'
+
+      - name: 'slack-warning'
+        slack_configs:
+          - channel: '#warning-alerts'
+            send_resolved: true
+            icon_emoji: '{{ if eq .Status "firing" }}:warning:{{ else }}:ok:{{ end }}'
+            color: '{{ template "slack.color" . }}'
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+            footer: 'Alertmanager'
+
+      - name: 'slack-backend'
+        slack_configs:
+          - channel: '#backend-alerts'
+            send_resolved: true
+            icon_emoji: '{{ if eq .Status "firing" }}:computer:{{ else }}:ok:{{ end }}'
+            color: '{{ template "slack.color" . }}'
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+            footer: 'Alertmanager'
+
+    templates:
+      - '/etc/alertmanager/templates.tmpl'
 
   templates.tmpl: |
     {{/* Severity of the alert */}}
@@ -60,8 +132,7 @@ data:
         {{- range .Labels.SortedPairs }}
         • *{{ .Name }}:* `{{ .Value }}`
         {{- end }}
-        {{- if .Annotations.runbook_url }}
-        *Runbook:* {{ .Annotations.runbook_url }}
+        {*Runbook:* {{ .Annotations.runbook_url }}
         {{- end }}
         {{- if .Annotations.grafana_url }}
         *Dashboard:* {{ .Annotations.grafana_url }}
@@ -70,4 +141,4 @@ data:
 
         *Job:* `{{ .CommonLabels.job }}`
         *Alert Source:* `{{ .CommonLabels.alertname }}`
-    {{- end }}
+    {{- end }}{- if .Annotations.runbook_url }}
