@@ -22,10 +22,10 @@ spec:
         protocols:
           http:
             endpoint: 0.0.0.0:3100
-    
+
       k8s_events:
         auth_type: serviceAccount
-    
+
       prometheus:
         config:
           scrape_configs:
@@ -72,8 +72,8 @@ spec:
       k8sattributes:
         auth_type: serviceAccount
         passthrough: false
-        extract: 
-          metadata: 
+        extract:
+          metadata:
             - k8s.pod.name
             - k8s.pod.uid
             - k8s.deployment.name
@@ -84,16 +84,16 @@ spec:
             - k8s.pod.start_time
         pod_association:
           - sources:
-            - from: resource_attributes
-              name: k8s.pod.name
-            - from: resource_attributes
-              name: k8s.namespace.name
+              - from: resource_attributes
+                name: k8s.pod.name
+              - from: resource_attributes
+                name: k8s.namespace.name
       metricstransform:
         transforms:
           - include: .*
             match_type: regexp
             action: update
-            new_name: '$1' 
+            new_name: '$1'
             operations:
               - action: update_label
                 label: otel_scope_name
@@ -121,13 +121,13 @@ spec:
           - action: insert
             key: service.name
             from_attribute: k8s.statefulset.name
-    
+
       memory_limiter:
         check_interval: 5s
         limit_percentage: 80
         spike_limit_percentage: 25
-    
-      batch: 
+
+      batch:
         send_batch_size: 10000
         timeout: 10s
 
@@ -143,7 +143,7 @@ spec:
         default_labels_enabled:
           exporter: true
           job: true
-    
+
       prometheusremotewrite:
         endpoint: "http://prometheus.observability.svc.cluster.local:9090/api/v1/write"
         tls:
@@ -164,15 +164,14 @@ spec:
           processors: [k8sattributes, memory_limiter, batch]
           exporters: [otlp/tempo, logging]
         logs:
-          receivers: [otlp, loki  ] 
+          receivers: [otlp, loki]
           processors: [k8sattributes,transform, resource, memory_limiter, batch]
           exporters: [loki, logging]
-      
+
         metrics:
           receivers: [otlp, prometheus]
-          processors: [ k8sattributes, memory_limiter,metricstransform, batch]
+          processors: [k8sattributes, memory_limiter,metricstransform, batch]
           exporters: [prometheusremotewrite, logging]
-
 
   ports:
     - name: metrics
