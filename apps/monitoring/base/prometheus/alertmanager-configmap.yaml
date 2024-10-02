@@ -44,75 +44,30 @@ data:
             color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            actions:
-              - type: button
-                text: 'Runbook :green_book:'
-                url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
-                style: 'primary'
-              - type: button
-                text: 'Query :mag:'
-                url: '{{ (index .Alerts 0).GeneratorURL }}'
-              - type: button
-                text: 'Dashboard :chart_with_upwards_trend:'
-                url: '{{ (index .Alerts 0).Annotations.dashboard_url }}'
-              - type: button
-                text: 'Silence :no_bell:'
-                url: '{{ template "__alert_silence_link" . }}'
-                style: 'danger'
-            footer: 'Alertmanager | {{ .CommonLabels.job }}'
-            ts: '{{ .StartsAt.Unix }}'
-
+            footer: 'Alertmanager'
+            parse: 'full'
+      
       - name: 'slack-critical'
         slack_configs:
           - channel: '#critical-alerts'
             send_resolved: true
             icon_emoji: '{{ if eq .Status "firing" }}:fire:{{ else }}:ok:{{ end }}'
-            color: 'danger'
+            color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            actions:
-              - type: button
-                text: 'Runbook :green_book:'
-                url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
-                style: 'primary'
-              - type: button
-                text: 'Query :mag:'
-                url: '{{ (index .Alerts 0).GeneratorURL }}'
-              - type: button
-                text: 'Dashboard :chart_with_upwards_trend:'
-                url: '{{ (index .Alerts 0).Annotations.dashboard_url }}'
-              - type: button
-                text: 'Silence :no_bell:'
-                url: '{{ template "__alert_silence_link" . }}'
-                style: 'danger'
-            footer: 'Alertmanager | {{ .CommonLabels.job }}'
-            ts: '{{ .StartsAt.Unix }}'
+            footer: 'Alertmanager'
+            parse: 'full'
 
       - name: 'slack-warning'
         slack_configs:
           - channel: '#warning-alerts'
             send_resolved: true
             icon_emoji: '{{ if eq .Status "firing" }}:warning:{{ else }}:ok:{{ end }}'
-            color: 'warning'
+            color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            actions:
-              - type: button
-                text: 'Runbook :green_book:'
-                url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
-                style: 'primary'
-              - type: button
-                text: 'Query :mag:'
-                url: '{{ (index .Alerts 0).GeneratorURL }}'
-              - type: button
-                text: 'Dashboard :chart_with_upwards_trend:'
-                url: '{{ (index .Alerts 0).Annotations.dashboard_url }}'
-              - type: button
-                text: 'Silence :no_bell:'
-                url: '{{ template "__alert_silence_link" . }}'
-                style: 'danger'
-            footer: 'Alertmanager | {{ .CommonLabels.job }}'
-            ts: '{{ .StartsAt.Unix }}'
+            footer: 'Alertmanager'
+            parse: 'full'
 
       - name: 'slack-backend'
         slack_configs:
@@ -122,81 +77,85 @@ data:
             color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            actions:
-              - type: button
-                text: 'Runbook :green_book:'
-                url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
-                style: 'primary'
-              - type: button
-                text: 'Query :mag:'
-                url: '{{ (index .Alerts 0).GeneratorURL }}'
-              - type: button
-                text: 'Dashboard :chart_with_upwards_trend:'
-                url: '{{ (index .Alerts 0).Annotations.dashboard_url }}'
-              - type: button
-                text: 'Silence :no_bell:'
-                url: '{{ template "__alert_silence_link" . }}'
-                style: 'danger'
-            footer: 'Alertmanager | {{ .CommonLabels.job }}'
-            ts: '{{ .StartsAt.Unix }}'
+            footer: 'Alertmanager'
+            parse: 'full'
 
     templates:
       - '/etc/alertmanager/templates.tmpl'
 
   templates.tmpl: |
-    {{ define "slack.title" }}
-    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
-    {{ end }}
-
-    {{ define "slack.text" }}
-    {{ template "__alert_severity" . }}
-    {{ if gt (len .Alerts.Firing) 0 }}
-    *Alerts Firing:*
-    {{ range .Alerts.Firing }}
-    • {{ .Annotations.summary }}
-    {{ if .Annotations.description }}*Description:* {{ .Annotations.description }}{{ end }}
-    {{ end }}
-    {{ end }}
-    {{ if gt (len .Alerts.Resolved) 0 }}
-    *Alerts Resolved:*
-    {{ range .Alerts.Resolved }}
-    • {{ .Annotations.summary }}
-    {{ end }}
-    {{ end }}
-    {{ end }}
-
-    {{ define "__alert_severity" }}
-    {{- if eq .CommonLabels.severity "critical" -}}
-    *Severity:* `Critical`
-    {{- else if eq .CommonLabels.severity "warning" -}}
-    *Severity:* `Warning`
-    {{- else if eq .CommonLabels.severity "info" -}}
-    *Severity:* `Info`
-    {{- else -}}
-    *Severity:* `{{ .CommonLabels.severity }}`
+    {{/* Alertmanager Silence link */}}
+    {{ define "__alert_silence_link" -}}
+        {{ .ExternalURL }}/#/silences/new?filter=%7B
+        {{- range .CommonLabels.SortedPairs -}}
+            {{- if ne .Name "alertname" -}}
+                {{- .Name }}%3D"{{- .Value -}}"%2C%20
+            {{- end -}}
+        {{- end -}}
+        alertname%3D"{{- .CommonLabels.alertname -}}"%7D
     {{- end }}
-    {{ end }}
 
-    {{ define "slack.color" }}
-    {{- if eq .Status "firing" -}}
-        {{- if eq .CommonLabels.severity "warning" -}}
-            warning
-        {{- else if eq .CommonLabels.severity "critical" -}}
-            danger
+    {{/* Severity of the alert */}}
+    {{ define "__alert_severity" -}}
+        {{- if eq .CommonLabels.severity "critical" -}}
+        *Severity:* :red_circle: `Critical`
+        {{- else if eq .CommonLabels.severity "warning" -}}
+        *Severity:* :warning: `Warning`
+        {{- else if eq .CommonLabels.severity "info" -}}
+        *Severity:* :information_source: `Info`
         {{- else -}}
-            #439FE0
-        {{- end -}}
-    {{- else -}}
-    good
+        *Severity:* :question: `{{ .CommonLabels.severity }}`
+        {{- end }}
     {{- end }}
-    {{ end }}
 
-    {{ define "__alert_silence_link" }}
-    {{ .ExternalURL }}/#/silences/new?filter=%7B
-    {{- range .CommonLabels.SortedPairs -}}
-        {{- if ne .Name "alertname" -}}
-            {{- .Name }}%3D"{{- .Value -}}"%2C%20
-        {{- end -}}
-    {{- end -}}
-    alertname%3D"{{- .CommonLabels.alertname -}}"%7D
-    {{ end }}
+    {{/* Title of the Slack alert */}}
+    {{ define "slack.title" -}}
+      {{ if eq .Status "firing" }}:rotating_light:{{ else }}:green_heart:{{ end }} {{ .Status | toUpper }}{{ if eq .Status "firing" }} ({{ .Alerts.Firing | len }}){{ end }}: {{ .CommonLabels.alertname }}
+    {{- end }}
+
+    {{/* Color of Slack attachment */}}
+    {{ define "slack.color" -}}
+        {{ if eq .Status "firing" -}}
+            {{ if eq .CommonLabels.severity "warning" -}}
+                #FFA500
+            {{- else if eq .CommonLabels.severity "critical" -}}
+                #FF0000
+            {{- else -}}
+                #439FE0
+            {{- end -}}
+        {{ else -}}
+        #36a64f
+        {{- end }}
+    {{- end }}
+
+    {{/* The text to display in the alert */}}
+    {{ define "slack.text" -}}
+        {{ template "__alert_severity" . }}
+        {{- if (index .Alerts 0).Annotations.summary }}
+        *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+        {{- end }}
+
+        {{ range .Alerts }}
+        ---
+        {{- if .Annotations.description }}
+        *Description:* {{ .Annotations.description }}
+        {{- end }}
+        {{- if .Annotations.message }}
+        *Message:* {{ .Annotations.message }}
+        {{- end }}
+        *Labels:*
+        {{- range .Labels.SortedPairs }}
+        • *{{ .Name }}:* `{{ .Value }}`
+        {{- end }}
+        {{- if .Annotations.runbook_url }}
+        *Runbook:* <{{ .Annotations.runbook_url }}|:green_book: View Runbook>
+        {{- end }}
+        {{- if .Annotations.grafana_url }}
+        *Dashboard:* <{{ .Annotations.grafana_url }}|:bar_chart: View in Grafana>
+        {{- end }}
+        *Silence:* <{{ template "__alert_silence_link" . }}|:no_bell: Silence Alert>
+        {{- end }}
+
+        *Job:* `{{ .CommonLabels.job }}`
+        *Alert Source:* `{{ .CommonLabels.alertname }}`
+    {{- end }}
