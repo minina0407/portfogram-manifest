@@ -11,7 +11,7 @@ spec:
   serviceAccount: otel-collector
   image: otel/opentelemetry-collector-contrib:latest
   args:
-    - "--config=/conf/collector.yaml"
+    config: /conf/collector.yaml
   config: |
     receivers:
       otlp:
