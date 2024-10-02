@@ -1,4 +1,3 @@
-#alertmanager-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,7 +10,7 @@ data:
 
     route:
       receiver: 'slack-alerts' # Default receiver
-      group_by: ['alertname', 'job']
+      group_by: ['alertname']
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 4h
@@ -28,16 +27,13 @@ data:
         - match:
             team: infra
           receiver: 'slack-infra'
-        - match_re:
-            alertname: .*
-          receiver: 'slack-alerts'
-    
+
     inhibit_rules:
       - source_match:
           severity: 'critical'
         target_match:
           severity: 'warning'
-        equal: ['alertname', 'region']
+        equal: ['alertname']
     
     receivers:
       - name: 'slack-critical'
@@ -70,30 +66,18 @@ data:
 
   template.tmpl: |
     {{ define "slack.default.title" }}
-    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}{{ if .GroupLabels.job }} - {{ .GroupLabels.job }}{{ end }}
+    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
     {{ end }}
     
     {{ define "slack.default.text" }}
     :{{ if eq .Status "firing" }}warning{{ else }}white_check_mark{{ end }}: *{{ .Status | toUpper }}*: {{ .GroupLabels.alertname }}
-    {{ if .GroupLabels.job }}*Job:* {{ .GroupLabels.job }}{{ end }}
-    {{ if .CommonLabels.severity }}*Severity:* {{ .CommonLabels.severity }}{{ else }}*Severity:* Not specified{{ end }}
-    {{ if .CommonLabels.team }}*Team:* {{ .CommonLabels.team }}{{ else }}*Team:* Not specified{{ end }}
-    
-    {{ if .CommonAnnotations.summary }}*Summary:* {{ .CommonAnnotations.summary }}{{ end }}
-    {{ if .CommonAnnotations.description }}*Description:* {{ .CommonAnnotations.description }}{{ end }}
-    
-    {{ if gt (len .Alerts.Firing) 0 }}
-    *Alerts Firing:*
-    {{ range .Alerts.Firing }}
-      • {{ if .Labels.instance }}{{ .Labels.instance }}: {{ end }}{{ .Annotations.description }}
-    {{ end }}
-    {{ end }}
-    
-    {{ if gt (len .Alerts.Resolved) 0 }}
-    *Alerts Resolved:*
-    {{ range .Alerts.Resolved }}
-      • {{ if .Labels.instance }}{{ .Labels.instance }}: {{ end }}{{ .Annotations.description }}
-    {{ end }}
+    {{ range .Alerts -}}
+    *Labels:*
+      {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+      {{ end }}
+    *Annotations:*
+      {{ range .Annotations.SortedPairs }} • *{{ .Name }}:* {{ .Value }}
+      {{ end }}
     {{ end }}
     
     {{ if .CommonAnnotations.runbook_url }}*Runbook:* {{ .CommonAnnotations.runbook_url }}{{ end }}
