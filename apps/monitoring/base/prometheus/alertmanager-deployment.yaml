@@ -19,6 +19,12 @@ spec:
           args:
             - "--config.file=/etc/alertmanager/alertmanager.yml"
             - "--storage.path=/alertmanager"
+          env:
+            - name: SLACK_URL_WARNING
+              valueFrom:
+                secretKeyRef:
+                  name: slack-urls
+                  key: slack_url_warning
           ports:
             - containerPort: 9093
           readinessProbe:

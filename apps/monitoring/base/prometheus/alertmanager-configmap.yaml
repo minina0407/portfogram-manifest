@@ -44,6 +44,7 @@ data:
       - name: 'slack-warning'
         slack_configs:
           - channel: '#warning-alerts'
+            api_url: '{{ .Slack.UrlWarning }}'
             send_resolved: true
       
       - name: 'slack-backend'
