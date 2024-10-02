@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: slack-app-token
+  namespace: observability
+type: Opaque
+data:
+  token: eGFwcC0xLUEwN01CUUE5QjNRLTc4MDkwOTExMjgyNjItYjg1MTQ4ZWQ1ZGIzOGEyZTk5MTUxOTViZDFkMDFlNmM1MTE2Y2FjMGU3YjNkYmVlM2Y3NTIyYTg5OTE4NGE2Yg==

@@ -19,12 +19,6 @@ spec:
           args:
             - "--config.file=/etc/alertmanager/alertmanager.yml"
             - "--storage.path=/alertmanager"
-          env:
-            - name: SLACK_URL_WARNING
-              valueFrom:
-                secretKeyRef:
-                  name: slack-urls
-                  key: slack_url_warning
           ports:
             - containerPort: 9093
           readinessProbe:
@@ -54,6 +48,9 @@ spec:
             - name: alertmanager-secrets
               mountPath: /etc/alertmanager/secrets
               readOnly: true
+            - name: slack-token
+              mountPath: /etc/alertmanager/secrets
+              readOnly: true
             - name: storage-volume
               mountPath: /alertmanager
       volumes:
@@ -65,6 +62,12 @@ spec:
             secretName: alertmanager-secrets
         - name: storage-volume
           emptyDir: {}
+        - name: slack-token
+          secret:
+            secretName: slack-app-token
+            items:
+              - key: token
+                path: slack_token
 ---
 apiVersion: bitnami.com/v1alpha1
 kind: SealedSecret
