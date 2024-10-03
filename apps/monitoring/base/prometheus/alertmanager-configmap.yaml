@@ -41,16 +41,11 @@ data:
           - channel: '#alerts'
             send_resolved: true
             icon_emoji: '{{ if eq .Status "firing" }}:fire:{{ else }}:ok:{{ end }}'
-         #   color: '{{ template "slack.color" . }}'
-         #   title: '{{ template "slack.title" . }}'
+            color: '{{ template "slack.color" . }}'
+            title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
             footer: 'PortfoGram Alertmanager | <{{ template "slack.runbook" . }}|View Runbook>'
-           # actions:
-           #   - type: button
-           #     text: 'Open in Grafana'
-          #      url: '{{ template "slack.grafana" . }}'
 
-      
       - name: 'slack-critical'
         slack_configs:
           - channel: '#critical-alerts'
@@ -59,7 +54,7 @@ data:
             color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            footer: 'Alertmanager'
+            footer: 'PortfoGram Alertmanager'
 
       - name: 'slack-warning'
         slack_configs:
@@ -69,7 +64,7 @@ data:
             color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            footer: 'Alertmanager'
+            footer: 'PortfoGram Alertmanager'
 
       - name: 'slack-backend'
         slack_configs:
@@ -77,17 +72,38 @@ data:
             send_resolved: true
             icon_emoji: '{{ if eq .Status "firing" }}:computer:{{ else }}:ok:{{ end }}'
             color: '{{ template "slack.color" . }}'
-            # title: '{{ template "slack.title" . }}'
+            title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            footer: 'Alertmanager'
+            footer: 'PortfoGram Alertmanager'
 
     templates:
       - '/etc/alertmanager/templates.tmpl'
 
   templates.tmpl: |
-    {{ define "slack.text" }}
-    {{ if eq .Status "firing" }}🚨 *ALERT FIRING*{{ else }}✅ *ALERT RESOLVED*{{ end }}
+    {{/* Color of Slack attachment */}}
+    {{ define "slack.color" -}}
+        {{- if eq .Status "firing" -}}
+            {{- if eq .CommonLabels.severity "critical" -}}
+                #FF0000
+            {{- else if eq .CommonLabels.severity "warning" -}}
+                #FFA500
+            {{- else -}}
+                #0000FF
+            {{- end -}}
+        {{- else -}}
+            #00FF00
+        {{- end }}
+    {{- end }}
 
+    {{/* Title of the Slack alert */}}
+    {{ define "slack.title" -}}
+        {{- if eq .Status "firing" -}}🚨 ALERT FIRING
+        {{- else -}}✅ ALERT RESOLVED
+        {{- end -}}
+        : {{ .CommonLabels.alertname }}
+    {{- end }}
+
+    {{ define "slack.text" }}
     *Alert:* `{{ .CommonLabels.alertname }}`
     *Severity:* `{{ .CommonLabels.severity | toUpper }}`
     *Summary:* {{ (index .Alerts 0).Annotations.summary }}
@@ -118,3 +134,12 @@ data:
     <!here> *This alert requires attention. Please investigate.*
     {{ end }}
     {{ end }}
+
+    {{/* Runbook URL */}}
+    {{ define "slack.runbook" -}}
+        {{- if (index .Alerts 0).Annotations.runbook_url -}}
+            {{- (index .Alerts 0).Annotations.runbook_url -}}
+        {{- else -}}
+            https://wiki.portfogram.com/runbooks
+        {{- end -}}
+    {{- end }}
