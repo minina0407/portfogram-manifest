@@ -15,16 +15,71 @@ data:
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 3h
-
+      routes:
+        - match:
+            severity: critical
+          receiver: 'slack-critical'
+          continue: true
+        - match:
+            severity: warning
+          receiver: 'slack-warning'
+          continue: true
+        - match:
+            team: backend
+          receiver: 'slack-backend'
+    
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'region']
+    
     receivers:
       - name: 'slack-alerts'
         slack_configs:
           - channel: '#alerts'
             send_resolved: true
-            icon_url: 'https://example.com/portfogram-logo.png'
-            username: 'PortfoGram AlertBot'
+            icon_emoji: '{{ if eq .Status "firing" }}:fire:{{ else }}:ok:{{ end }}'
+         #   color: '{{ template "slack.color" . }}'
+         #   title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            footer: 'PortfoGram Alertmanager'
+            footer: 'PortfoGram Alertmanager | <{{ template "slack.runbook" . }}|View Runbook>'
+           # actions:
+           #   - type: button
+           #     text: 'Open in Grafana'
+          #      url: '{{ template "slack.grafana" . }}'
+
+      
+      - name: 'slack-critical'
+        slack_configs:
+          - channel: '#critical-alerts'
+            send_resolved: true
+            icon_emoji: '{{ if eq .Status "firing" }}:fire:{{ else }}:ok:{{ end }}'
+            color: '{{ template "slack.color" . }}'
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+            footer: 'Alertmanager'
+
+      - name: 'slack-warning'
+        slack_configs:
+          - channel: '#warning-alerts'
+            send_resolved: true
+            icon_emoji: '{{ if eq .Status "firing" }}:warning:{{ else }}:ok:{{ end }}'
+            color: '{{ template "slack.color" . }}'
+            title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+            footer: 'Alertmanager'
+
+      - name: 'slack-backend'
+        slack_configs:
+          - channel: '#backend-alerts'
+            send_resolved: true
+            icon_emoji: '{{ if eq .Status "firing" }}:computer:{{ else }}:ok:{{ end }}'
+            color: '{{ template "slack.color" . }}'
+            # title: '{{ template "slack.title" . }}'
+            text: '{{ template "slack.text" . }}'
+            footer: 'Alertmanager'
 
     templates:
       - '/etc/alertmanager/templates.tmpl'
@@ -36,39 +91,30 @@ data:
     *Alert:* `{{ .CommonLabels.alertname }}`
     *Severity:* `{{ .CommonLabels.severity | toUpper }}`
     *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-
-    {{ if eq .Status "firing" }}
     *Affected Instances:* {{ .Alerts | len }}
-    {{ end }}
+
+    *Key Details:*
+    • *Cluster:* `{{ (index .Alerts 0).Labels.cluster }}`
+    • *Namespace:* `{{ (index .Alerts 0).Labels.kubernetes_namespace }}`
+    • *Pod:* `{{ (index .Alerts 0).Labels.kubernetes_pod_name }}`
+    • *Reason:* `{{ (index .Alerts 0).Labels.reason }}`
+
+    *Actions:*
+    • <{{ (index .Alerts 0).GeneratorURL }}|View in Prometheus>
+    • <https://your-alertmanager-url.com/#/silences/new?filter=%7balertname%3D%22{{ .CommonLabels.alertname }}%22%7d|Silence Alert>
+
+    <details><summary>Click for more details</summary>
 
     {{ range .Alerts }}
     ---
-    {{ if .Annotations.description }}
-    *Description:* {{ .Annotations.description }}
-    {{ end }}
-    *Started:* <!date^{{ .StartsAt.Unix }}^{date_num} {time_secs}|{{ .StartsAt.Format "2006-01-02 15:04:05" }}>
-    {{ if ne .Status "firing" }}
-    *Ended:* <!date^{{ .EndsAt.Unix }}^{date_num} {time_secs}|{{ .EndsAt.Format "2006-01-02 15:04:05" }}>
-    {{ end }}
-
+    *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
     *Labels:*
     {{ range .Labels.SortedPairs }}  • *{{ .Name }}:* `{{ .Value }}`
     {{ end }}
-    {{ if .Annotations.runbook_url }}
-    *Runbook:* <{{ .Annotations.runbook_url }}|View runbook>
     {{ end }}
-    {{ end }}
-
-    *Actions:*
-    • <{{ (index .Alerts 0).GeneratorURL }}|:mag: View in Prometheus>
-    {{ if (index .Alerts 0).Annotations.dashboard_url }}
-    • <{{ (index .Alerts 0).Annotations.dashboard_url }}|:bar_chart: View Dashboard>
-    {{ end }}
-    • <https://your-alertmanager-url.com/#/silences/new?filter=%7balertname%3D%22{{ .CommonLabels.alertname }}%22%7d|:no_bell: Silence Alert>
+    </details>
 
     {{ if eq .Status "firing" }}
-    <!here> *This alert requires immediate attention. Please investigate and take necessary actions.*
-    {{ else }}
-    *The alert has been resolved. No further action is required.*
+    <!here> *This alert requires attention. Please investigate.*
     {{ end }}
     {{ end }}
