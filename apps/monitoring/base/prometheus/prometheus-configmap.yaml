@@ -109,7 +109,7 @@ data:
       - name: kubernetes-apps
         rules:
           - alert: KubePodCrashLooping
-            expr: max_over_time(kube_pod_container_status_waiting_reason{job="kube-state-metrics",namespace=~".*",reason="CrashLoopBackOff"}[5m]) >= 1
+            expr: max_over_time(kube_pod_container_status_waiting_reason{kubernetes_pod_name="kube-state-metrics-0",namespace=~".*",reason="CrashLoopBackOff"}[5m]) >= 1
             for: 15m
             labels:
               severity: warning
@@ -166,7 +166,7 @@ data:
       - name: alertmanager
         rules:
           - alert: AlertmanagerConfigurationReloadFailure
-            expr: alertmanager_config_last_reload_successful{job="datacenter-kube-prometheus-alertmanager",namespace="datacenter"} != 1
+            expr: alertmanager_config_last_reload_successful{job="kube-prometheus-alertmanager"} != 1
             for: 10m
             labels:
               severity: critical
@@ -175,7 +175,7 @@ data:
               description: Configuration has failed to load for {{ $labels.namespace }}/{{ $labels.pod}}.
           
           - alert: AlertmanagerFailedToSendAlerts
-            expr: (rate(alertmanager_notifications_failed_total{job="datacenter-kube-prometheus-alertmanager",namespace="datacenter"}[5m]) / rate(alertmanager_notifications_total{job="datacenter-kube-prometheus-alertmanager",namespace="datacenter"}[5m])) > 0.01
+            expr: (rate(alertmanager_notifications_failed_total{job="kube-prometheus-alertmanager",namespace="datacenter"}[5m]) / rate(alertmanager_notifications_total{job="datacenter-kube-prometheus-alertmanager",namespace="datacenter"}[5m])) > 0.01
             for: 5m
             labels:
               severity: warning

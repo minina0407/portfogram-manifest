@@ -44,7 +44,12 @@ data:
             color: '{{ template "slack.color" . }}'
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
-            footer: 'Alertmanager'
+            footer: 'PortfoGram Alertmanager | <{{ template "slack.runbook" . }}|View Runbook>'
+            actions:
+              - type: button
+                text: 'Open in Grafana'
+                url: '{{ template "slack.grafana" . }}'
+
       
       - name: 'slack-critical'
         slack_configs:
@@ -80,66 +85,84 @@ data:
       - '/etc/alertmanager/templates.tmpl'
 
   templates.tmpl: |
-    {{/* Severity of the alert */}}
-    {{ define "__alert_severity" -}}
-        {{- if eq .CommonLabels.severity "critical" -}}
-        *Severity:* :red_circle: `Critical`
-        {{- else if eq .CommonLabels.severity "warning" -}}
-        *Severity:* :warning: `Warning`
-        {{- else if eq .CommonLabels.severity "info" -}}
-        *Severity:* :information_source: `Info`
+    {{/* Color of Slack attachment */}}
+    {{ define "slack.color" -}}
+        {{- if eq .Status "firing" -}}
+            {{- if eq .CommonLabels.severity "critical" -}}
+                #FF4136
+            {{- else if eq .CommonLabels.severity "warning" -}}
+                #FF851B
+            {{- else -}}
+                #0074D9
+            {{- end -}}
         {{- else -}}
-        *Severity:* :question: `{{ .CommonLabels.severity }}`
-        {{- end }}
+            #2ECC40
+        {{- end -}}
     {{- end }}
 
     {{/* Title of the Slack alert */}}
     {{ define "slack.title" -}}
-      {{ if eq .Status "firing" }}:rotating_light:{{ else }}:green_heart:{{ end }} {{ .Status | toUpper }}{{ if eq .Status "firing" }} ({{ .Alerts.Firing | len }}){{ end }}: {{ .CommonLabels.alertname }}
-    {{- end }}
-
-    {{/* Color of Slack attachment */}}
-    {{ define "slack.color" -}}
-        {{ if eq .Status "firing" -}}
-            {{ if eq .CommonLabels.severity "warning" -}}
-                #FFA500
-            {{- else if eq .CommonLabels.severity "critical" -}}
-                #FF0000
+        {{- if eq .Status "firing" -}}
+            {{- if eq .CommonLabels.severity "critical" -}}
+                :rotating_light: CRITICAL ALERT :rotating_light:
+            {{- else if eq .CommonLabels.severity "warning" -}}
+                :warning: WARNING ALERT :warning:
             {{- else -}}
-                #439FE0
+                :blue_book: INFO ALERT :blue_book:
             {{- end -}}
-        {{ else -}}
-        #36a64f
-        {{- end }}
+        {{- else -}}
+            :white_check_mark: RESOLVED :white_check_mark:
+        {{- end -}}
+        {{ .CommonLabels.alertname }}
     {{- end }}
-
+    
     {{/* The text to display in the alert */}}
     {{ define "slack.text" -}}
-        {{ template "__alert_severity" . }}
-        {{- if (index .Alerts 0).Annotations.summary }}
-        *Summary:* {{ (index .Alerts 0).Annotations.summary }}
-        {{- end }}
-
-        {{ range .Alerts }}
-        ---
-        {{- if .Annotations.description }}
-        *Description:* {{ .Annotations.description }}
-        {{- end }}
-        {{- if .Annotations.message }}
-        *Message:* {{ .Annotations.message }}
-        {{- end }}
-        *Labels:*
-        {{- range .Labels.SortedPairs }}
-        • *{{ .Name }}:* `{{ .Value }}`
-        {{- end }}
-        {{- if .Annotations.runbook_url }}
-        *Runbook:* {{ .Annotations.runbook_url }}
-        {{- end }}
-        {{- if .Annotations.grafana_url }}
-        *Dashboard:* {{ .Annotations.grafana_url }}
-        {{- end }}
-        {{- end }}
-
-        *Job:* `{{ .CommonLabels.job }}`
-        *Alert Source:* `{{ .CommonLabels.alertname }}`
+    *Status:* {{ if eq .Status "firing" }}:fire: Active{{ else }}:white_check_mark: Resolved{{ end }}
+    *Severity:* {{ template "slack.severity" . }}
+    *Summary:* {{ (index .Alerts 0).Annotations.summary }}
+    {{ range .Alerts }}
+    ---
+    *Description:* {{ .Annotations.description }}
+    *Start Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+    {{- if ne .Status "firing" }}
+    *End Time:* {{ .EndsAt.Format "2006-01-02 15:04:05" }}
+    {{- end }}
+    *Affected Service:* `{{ .Labels.service }}`
+    *Region:* `{{ .Labels.region }}`
+    {{- if .Annotations.runbook_url }}
+    *Runbook:* <{{ .Annotations.runbook_url }}|Click here>
+    {{- end }}
+    {{- if .Annotations.dashboard_url }}
+    *Dashboard:* <{{ .Annotations.dashboard_url }}|View in Grafana>
+    {{- end }}
+    {{- if .Annotations.portfolio_impact }}
+    *Portfolio Impact:* {{ .Annotations.portfolio_impact }}
+    {{- end }}
+    {{ end }}
+    
+    *Alert Group:* `{{ .GroupLabels.alertname }}`
+    *Job:* `{{ .CommonLabels.job }}`
+    {{- end }}
+    
+    {{/* Severity of the alert */}}
+    {{ define "slack.severity" -}}
+    {{- if eq .CommonLabels.severity "critical" -}}
+    :red_circle: `CRITICAL`
+    {{- else if eq .CommonLabels.severity "warning" -}}
+    :large_orange_diamond: `WARNING`
+    {{- else if eq .CommonLabels.severity "info" -}}
+    :large_blue_circle: `INFO`
+    {{- else -}}
+    :question: `{{ .CommonLabels.severity }}`
+    {{- end }}
+    {{- end }}
+    
+    {{/* Runbook URL */}}
+    {{ define "slack.runbook" -}}
+    {{- if (index .Alerts 0).Annotations.runbook_url -}}
+    {{- (index .Alerts 0).Annotations.runbook_url -}}
+    {{- else -}}
+    https://wiki.portfogram.com/runbooks
+    {{- end -}}
     {{- end }}
