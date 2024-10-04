@@ -96,16 +96,7 @@ data:
             
 
   rules.yml: |
-    groups:
-      - name: example
-        rules:
-        - alert: AlwaysFiring
-          expr: vector(1)
-          labels:
-            severity: critical
-          annotations:
-            summary: This alert is always firing
-            description: This is a test alert that is always firing
+    groups: 
       - name: kubernetes-apps
         rules:
           - alert: KubePodCrashLooping
@@ -126,14 +117,43 @@ data:
               description: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-ready state for longer than 15 minutes.
           
           - alert: KubeDeploymentReplicasMismatch
-            expr: (kube_deployment_spec_replicas{job="kube-state-metrics",namespace=~".*"} > kube_deployment_status_replicas_available{job="kube-state-metrics",namespace=~".*"}) and (changes(kube_deployment_status_replicas_updated{job="kube-state-metrics",namespace=~".*"}[10m]) == 0)
+            expr: kube_deployment_spec_replicas{kubernetes_pod_name="kube-state-metrics-0", namespace=~".*"} > kube_deployment_status_replicas_available{kubernetes_pod_name="kube-state-metrics-0", namespace=~".*"} and (changes(kube_deployment_status_replicas_updated{kubernetes_pod_name="kube-state-metrics-0", namespace=~".*"}[10m]) == 0)
             for: 15m
             labels:
               severity: warning
             annotations:
-              summary: Deployment has not matched the expected number of replicas
-              description: Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has not matched the expected number of replicas for longer than 15 minutes.
-
+              summary: 디플로이먼트가 예상된 레플리카 수에 도달하지 못함
+              description: "{{ $labels.namespace }} 네임스페이스의 {{ $labels.pod }} 파드가 예상된 레플리카 수에 도달하지 못했습니다."
+          - alert: KubeContainerWaiting
+            expr: sum by(namespace, pod, container) (kube_pod_container_status_waiting_reason{kubernetes_pod_name="kube-state-metrics-0", namespace=~".*"}) > 0
+            for: 1h
+            labels:
+              severity: warning
+            annotations:
+              description: "{{ $labels.namespace }} 네임스페이스의 {{ $labels.pod }} 파드에 있는 {{ $labels.container }} 컨테이너가 1시간 이상 대기 상태에 있습니다."
+              runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubecontainerwaiting
+              summary: "파드 컨테이너가 1시간 이상 대기 중"
+      - name: kubernetes-storage
+        rules:
+          - alert: KubePersistentVolumeErrors
+            expr: kube_persistentvolumeclaim_status_phase{kubernetes_pod_name="kube-state-metrics-0", phase=~"Failed|Pending"} > 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+                summary: PersistentVolume is having issues with provisioning.
+                description: PersistentVolumeClaim {{ $labels.namespace }}/{{ $labels.pod }} is in a failed state.
+                
+      - name: kubernetes-system-kubelet
+        rules:
+        alert: KubeletClientCertificateExpiration
+        expr: kubelet_certificate_manager_client_ttl_seconds < 604800
+        labels:
+          severity: warning
+        annotations:
+        description: Client certificate for Kubelet on node {{ $labels.node }} expires in {{ $value | humanizeDuration }}.
+        summary: Kubelet client certificate is about to expire.
+        
       - name: node-exporter
         rules:
           - alert: HostOutOfMemory
@@ -165,24 +185,71 @@ data:
 
       - name: alertmanager
         rules:
-          - alert: AlertmanagerConfigurationReloadFailure
-            expr: alertmanager_config_last_reload_successful{job="kube-prometheus-alertmanager"} != 1
+          - alert: AlertmanagerFailedReload
+            expr: max_over_time(alertmanager_config_last_reload_successful{app="alertmanager"}[5m]) == 0
             for: 10m
             labels:
               severity: critical
             annotations:
-              summary: Reloading an Alertmanager configuration has failed
+              summary: Reloading an Alertmanager configuration has failed.
               description: Configuration has failed to load for {{ $labels.namespace }}/{{ $labels.pod}}.
           
           - alert: AlertmanagerFailedToSendAlerts
-            expr: (rate(alertmanager_notifications_failed_total{job="kube-prometheus-alertmanager",namespace="datacenter"}[5m]) / rate(alertmanager_notifications_total{job="datacenter-kube-prometheus-alertmanager",namespace="datacenter"}[5m])) > 0.01
+            expr: (rate(alertmanager_notifications_failed_total{app="-alertmanager"}[5m]) / rate(alertmanager_notifications_total{app="alertmanager"}[5m])) > 0.01
             for: 5m
             labels:
               severity: warning
             annotations:
               summary: An Alertmanager instance failed to send notifications
               description: Alertmanager {{ $labels.namespace }}/{{ $labels.pod}} failed to send {{ $value | humanizePercentage }} of notifications to {{ $labels.integration }}.
-
+      
+      - name: general
+        rules:
+         - alert: Watch
+           expr: vector(1)
+           labels:
+              severity: none
+           annotations:
+              summary: "This is a general-purpose alert."
+              description: "This alert is for testing purposes."
+         
+         - alerts: InfoInhibitor
+           expr: ALERTS{severity="info"} == 1 unless on(namespace) ALERTS{alertname!="InfoInhibitor",alertstate="firing",severity=~"warning|critical"} == 1
+           labels:
+              severity: none
+              annotations:
+                summary: "정보 수준 알림 억제 메커니즘"
+                description: >
+                  이 알림은 정보(info) 수준 알림을 관리하기 위해 사용됩니다. 
+                  정보 수준 알림은 때로 너무 빈번하게 발생하여 불필요한 소음이 될 수 있지만, 
+                  다른 중요한 알림과 함께 발생할 때는 유용한 정보가 됩니다. 
+                  이 알림은 정보 수준 알림이 발생할 때 활성화되며, 
+                  같은 네임스페이스에서 '경고' 또는 '심각' 수준의 다른 알림이 발생하면 비활성화됩니다.         
+            
+      - name: config-reloaders
+        rules:
+          - alert: ReloaderFailure
+            expr: max_over_time(reloader_last_reload_successful{kubernetes_namespace=~".+"}[5m]) == 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Reloader 실패 감지"
+              description: "{{ $labels.app }} 애플리케이션의 reloader가 지난 5분 동안 성공적으로 리로드하지 못했습니다."
+     
+      - name: kube-prometheus-general
+        records: 
+        - record: count:up1
+          expr: count without(instance, pod, node) (up == 1)
+        
+        - record: count:up0
+          expr: count without(instance, pod, node) (up == 1)
+     
+      - name: kube-prometheus-node-recording
+        records:
+          - record: instance:node_cpu:rate:sum
+            expr: count without(cpu, mode) (node_cpu_seconds_total)
+     
       - name: prometheus
         rules:
           - alert: PrometheusBadConfig
@@ -202,89 +269,4 @@ data:
             annotations:
               summary: Prometheus is not ingesting samples
               description: Prometheus {{$labels.namespace}}/{{$labels.pod}} is not ingesting samples.
-
-      - name: kubernetes-system-alerts
-        rules:
-        - alert: EKSNodeNotReady
-          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
-          for: 5m
-          labels:
-            severity: critical
-          annotations:
-            summary: "EKS 노드 {{ $labels.node }} Ready 상태 아님"
-            description: "EKS 노드 {{ $labels.node }}가 5분 이상 Ready 상태가 아닙니다. AWS 콘솔에서 노드 상태를 확인하세요."
-  
-        - alert: OTelCollectorHighCPUUsage
-          expr: rate(process_cpu_seconds_total{job="otel-collector"}[5m]) > 0.8
-          for: 10m
-          labels:
-            severity: warning
-            team: observability
-          annotations:
-            summary: "OpenTelemetry Collector CPU 사용량 높음"
-            description: "OpenTelemetry Collector의 CPU 사용량이 10분 동안 80%를 초과했습니다. 수집기 구성을 최적화하거나 리소스를 늘리는 것을 고려하세요."
-  
-        - alert: LokiHighQueryLatency
-          expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket{route="/loki/api/v1/query_range"}[5m])) by (le)) > 10
-          for: 15m
-          labels:
-            severity: warning
-            team: observability
-          annotations:
-            summary: "Loki 쿼리 지연 시간 높음"
-            description: "Loki 쿼리의 99번째 백분위 지연 시간이 15분 동안 10초를 초과했습니다. 로그 쿼리 최적화가 필요할 수 있습니다."
-  
-        - alert: RedisHighMemoryUsage
-          expr: redis_memory_used_bytes / redis_total_system_memory_bytes * 100 > 90
-          for: 15m
-          labels:
-            severity: warning
-            team: database
-          annotations:
-            summary: "Redis 메모리 사용량 높음"
-            description: "Redis 인스턴스의 메모리 사용량이 15분 동안 90%를 초과했습니다. 캐시 정책을 검토하거나 메모리를 증설하세요."
-  
-        - alert: EKSPodPending
-          expr: sum(kube_pod_status_phase{phase="Pending"}) > 5
-          for: 10m
-          labels:
-            severity: warning
-            team: infrastructure
-          annotations:
-            summary: "다수의 EKS Pod Pending 상태"
-            description: "10분 이상 5개 이상의 Pod가 Pending 상태입니다. EKS 노드 용량을 확인하고 필요시 Auto Scaling 설정을 조정하세요."
-  
-        - alert: HighErrorRatePortfolioAPI
-          expr: sum(rate(http_requests_total{handler="/api/v1/portfolios", status=~"5.."}[5m])) / sum(rate(http_requests_total{handler="/api/v1/portfolio"}[5m])) * 100 > 5
-          for: 5m
-          labels:
-            severity: critical
-            team: backend
-          annotations:
-            summary: "포트폴리오 API 높은 오류율"
-            description: "포트폴리오 API의 오류율이 5분 동안 5%를 초과했습니다."
-  
-        - alert: GitHubActionsJobFailure
-          expr: github_actions_workflow_job_status{status="failure"} > 0
-          for: 15m
-          labels:
-            severity: warning
-            team: devops
-          annotations:
-            summary: "GitHub Actions 작업 실패"
-            description: "GitHub Actions 작업 {{ $labels.job_name }}이(가) {{ $labels.workflow }} 워크플로우에서 실패했습니다. CI/CD 파이프라인을 점검하세요."
-        
-        - alert: TestWarning
-          expr: vector(1)
-          labels:
-            severity: warning
-          annotations:
-            summary: Test warning alert
-    
-        - alert: TestBackend
-          expr: vector(1)
-          labels:
-            severity: warning
-            team: backend
-          annotations:
-            summary: Test backend alert
+              
