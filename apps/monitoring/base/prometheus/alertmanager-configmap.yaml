@@ -121,14 +121,15 @@ data:
     
     *Detailed Information:*
     {{ range .Alerts }}
-
+    ---
     *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
     *Additional Labels:*
-    {{- range .Labels.SortedPairs }}
-    {{- if and (ne .Name "alertname") (ne .Name "severity") (ne .Name "instance") (ne .Name "job") (ne .Name "cluster") (ne .Name "namespace") }}
-    • *{{ .Name }}:* `{{ .Value }}`
+    {{- range $key, $value := .Labels }}
+    {{- if and (ne $key "alertname") (ne $key "severity") (ne $key "instance") (ne $key "job") (ne $key "cluster") (ne $key "namespace") }}
+    • *{{ $key }}:* `{{ $value }}`
     {{- end }}
     {{- end }}
+    {{ end }}
     {{ end }}
 
     {{/* Runbook URL */}}
