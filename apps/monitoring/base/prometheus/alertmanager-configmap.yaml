@@ -122,7 +122,7 @@ data:
     *Detailed Information:*
     {{ range .Alerts }}
     ──────────────────────
-    • *Resource:* `{{ .Labels.kubernetes_pod_name | default .Labels.instance }}`
+    • *Resource:* `{{ .Labels.kubernetes_pod_name }}`
     {{- if .Labels.container }}
     • *Container:* `{{ .Labels.container }}`
     {{- end }}
