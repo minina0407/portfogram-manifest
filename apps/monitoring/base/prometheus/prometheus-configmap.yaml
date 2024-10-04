@@ -9,6 +9,7 @@ data:
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
+      external_url: 'http://prometheus.observability.svc.cluster.local:9090'
       external_labels:
         cluster: 'asia-southeast1'
         replica: '$(POD_NAME)'
@@ -22,9 +23,7 @@ data:
             - targets:
                 - alertmanager.observability.svc.cluster.local:9093
           api_version: v2
-    web:
-      external_url: 'http://prometheus.observability.svc.cluster.local:9090'
-      
+         
     scrape_configs:
       - job_name: 'kubernetes-apiservers'
         kubernetes_sd_configs:
