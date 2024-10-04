@@ -117,7 +117,7 @@ data:
 
     *Actions:*
     • <{{ (index .Alerts 0).GeneratorURL }}|View in Prometheus>
-    • <https://your-alertmanager-url.com/#/silences/new?filter=%7balertname%3D%22{{ .CommonLabels.alertname }}%22%7d|Silence Alert>
+    •  <{{ .ExternalURL }}/#/silences/new?filter=%7balertname%3D%22{{ .CommonLabels.alertname }}%22%7d|Silence Alert>
     
     *Affected Resources:*
     {{- range .Alerts }}
