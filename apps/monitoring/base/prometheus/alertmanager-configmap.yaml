@@ -136,7 +136,6 @@ data:
     {{- end }}
     {{- end }}
     {{- end }}
-    {{- end }}
     {{ end }}
 
     {{/* Runbook URL */}}
