@@ -119,20 +119,16 @@ data:
     • <{{ (index .Alerts 0).GeneratorURL }}|View in Prometheus>
     • <https://your-alertmanager-url.com/#/silences/new?filter=%7balertname%3D%22{{ .CommonLabels.alertname }}%22%7d|Silence Alert>
 
-    <details><summary>Click for more details</summary>
-
+    *Detailed Information:*
     {{ range .Alerts }}
-    ---
+  ---
     *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    *Labels:*
-    {{ range .Labels.SortedPairs }}  • *{{ .Name }}:* `{{ .Value }}`
-    {{ end }}
-    {{ end }}
-    </details>
-
-    {{ if eq .Status "firing" }}
-    <!here> *This alert requires attention. Please investigate.*
-    {{ end }}
+    *Additional Labels:*
+    {{- range .Labels.SortedPairs }}
+    {{- if and (ne .Name "alertname") (ne .Name "severity") (ne .Name "instance") (ne .Name "job") (ne .Name "cluster") (ne .Name "namespace") }}
+    • *{{ .Name }}:* `{{ .Value }}`
+    {{- end }}
+    {{- end }}
     {{ end }}
 
     {{/* Runbook URL */}}
