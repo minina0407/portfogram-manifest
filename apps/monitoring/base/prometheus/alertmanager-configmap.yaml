@@ -119,25 +119,22 @@ data:
     • <{{ (index .Alerts 0).GeneratorURL }}|View in Prometheus>
     • <https://your-alertmanager-url.com/#/silences/new?filter=%7balertname%3D%22{{ .CommonLabels.alertname }}%22%7d|Silence Alert>
     
-    *Detailed Information:*
-    {{ range .Alerts }}
+    *Affected Resources:*
+    {{- range .Alerts }}
     ──────────────────────
     • *Resource:* `{{ .Labels.kubernetes_pod_name }}`
-    {{- if .Labels.container }}
     • *Container:* `{{ .Labels.container }}`
-    {{- end }}
-    • *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    {{- if .Labels.reason }}
     • *Reason:* `{{ .Labels.reason }}`
+    • *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+    {{- if .Labels.app_kubernetes_io_name }}
+    • *App:* `{{ .Labels.app_kubernetes_io_name }}`
     {{- end }}
-    {{- range .Labels.SortedPairs }}
-    {{- if and (ne .Name "alertname") (ne .Name "severity") (ne .Name "cluster") (ne .Name "kubernetes_namespace") (ne .Name "job") (ne .Name "instance") (ne .Name "kubernetes_pod_name") (ne .Name "container") (ne .Name "reason") }}
-    • *{{ .Name }}:* `{{ .Value }}`
-    {{- end }}
+    {{- if .Labels.namespace }}
+    • *Namespace:* `{{ .Labels.namespace }}`
     {{- end }}
     {{- end }}
     {{ end }}
-
+    
     {{/* Runbook URL */}}
     {{ define "slack.runbook" -}}
         {{- if (index .Alerts 0).Annotations.runbook_url -}}
