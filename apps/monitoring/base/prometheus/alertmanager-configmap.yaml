@@ -121,12 +121,22 @@ data:
     
     *Detailed Information:*
     {{ range .Alerts }}
-    ---
-    *Pod:* `{{ .Labels.kubernetes_pod_name }}`
-    *Container:* `{{ .Labels.container }}`
-    *Reason:* `{{ .Labels.reason }}`
-    *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    {{ end }}
+    ──────────────────────
+    • *Resource:* `{{ .Labels.kubernetes_pod_name | default .Labels.instance }}`
+    {{- if .Labels.container }}
+    • *Container:* `{{ .Labels.container }}`
+    {{- end }}
+    • *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+    {{- if .Labels.reason }}
+    • *Reason:* `{{ .Labels.reason }}`
+    {{- end }}
+    {{- range .Labels.SortedPairs }}
+    {{- if and (ne .Name "alertname") (ne .Name "severity") (ne .Name "cluster") (ne .Name "kubernetes_namespace") (ne .Name "job") (ne .Name "instance") (ne .Name "kubernetes_pod_name") (ne .Name "container") (ne .Name "reason") }}
+    • *{{ .Name }}:* `{{ .Value }}`
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
     {{ end }}
 
     {{/* Runbook URL */}}
