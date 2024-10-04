@@ -96,7 +96,7 @@ data:
             
 
   rules.yml: |
-    groups: 
+    groups:
       - name: kubernetes-apps
         rules:
           - alert: KubePodCrashLooping
@@ -106,7 +106,7 @@ data:
               severity: warning
             annotations:
               summary: Pod is crash looping
-            
+    
           - alert: KubePodNotReady
             expr: sum by(namespace, pod) (max by(namespace, pod) (kube_pod_status_phase{job="kube-state-metrics",namespace=~".*",phase=~"Pending|Unknown"}) * on(namespace, pod) group_left(owner_kind) topk by(namespace, pod) (1, max by(namespace, pod, owner_kind) (kube_pod_owner{owner_kind!="Job"}))) > 0
             for: 15m
@@ -115,7 +115,7 @@ data:
             annotations:
               summary: Pod has been in a non-ready state for more than 15 minutes
               description: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-ready state for longer than 15 minutes.
-          
+    
           - alert: KubeDeploymentReplicasMismatch
             expr: kube_deployment_spec_replicas{kubernetes_pod_name="kube-state-metrics-0", namespace=~".*"} > kube_deployment_status_replicas_available{kubernetes_pod_name="kube-state-metrics-0", namespace=~".*"} and (changes(kube_deployment_status_replicas_updated{kubernetes_pod_name="kube-state-metrics-0", namespace=~".*"}[10m]) == 0)
             for: 15m
@@ -124,6 +124,7 @@ data:
             annotations:
               summary: 디플로이먼트가 예상된 레플리카 수에 도달하지 못함
               description: "{{ $labels.namespace }} 네임스페이스의 {{ $labels.pod }} 파드가 예상된 레플리카 수에 도달하지 못했습니다."
+    
           - alert: KubeContainerWaiting
             expr: sum by(namespace, pod, container) (kube_pod_container_status_waiting_reason{kubernetes_pod_name="kube-state-metrics-0", namespace=~".*"}) > 0
             for: 1h
@@ -133,6 +134,7 @@ data:
               description: "{{ $labels.namespace }} 네임스페이스의 {{ $labels.pod }} 파드에 있는 {{ $labels.container }} 컨테이너가 1시간 이상 대기 상태에 있습니다."
               runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubecontainerwaiting
               summary: "파드 컨테이너가 1시간 이상 대기 중"
+    
       - name: kubernetes-storage
         rules:
           - alert: KubePersistentVolumeErrors
@@ -141,19 +143,19 @@ data:
             labels:
               severity: critical
             annotations:
-                summary: PersistentVolume is having issues with provisioning.
-                description: PersistentVolumeClaim {{ $labels.namespace }}/{{ $labels.pod }} is in a failed state.
-                
+              summary: PersistentVolume is having issues with provisioning.
+              description: PersistentVolumeClaim {{ $labels.namespace }}/{{ $labels.pod }} is in a failed state.
+    
       - name: kubernetes-system-kubelet
         rules:
-        alert: KubeletClientCertificateExpiration
-        expr: kubelet_certificate_manager_client_ttl_seconds < 604800
-        labels:
-          severity: warning
-        annotations:
-        description: Client certificate for Kubelet on node {{ $labels.node }} expires in {{ $value | humanizeDuration }}.
-        summary: Kubelet client certificate is about to expire.
-        
+          - alert: KubeletClientCertificateExpiration
+            expr: kubelet_certificate_manager_client_ttl_seconds < 604800
+            labels:
+              severity: warning
+            annotations:
+              description: Client certificate for Kubelet on node {{ $labels.node }} expires in {{ $value | humanizeDuration }}.
+              summary: Kubelet client certificate is about to expire.
+    
       - name: node-exporter
         rules:
           - alert: HostOutOfMemory
@@ -164,7 +166,7 @@ data:
             annotations:
               summary: Host out of memory (instance {{ $labels.instance }})
               description: "Node memory is filling up (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
-          
+    
           - alert: HostHighCPULoad
             expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
             for: 0m
@@ -173,7 +175,7 @@ data:
             annotations:
               summary: Host high CPU load (instance {{ $labels.instance }})
               description: "CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
-          
+    
           - alert: HostOutOfDiskSpace
             expr: (node_filesystem_avail_bytes{mountpoint="/"}  * 100) / node_filesystem_size_bytes{mountpoint="/"} < 10
             for: 5m
@@ -182,7 +184,7 @@ data:
             annotations:
               summary: Host out of disk space (instance {{ $labels.instance }})
               description: "Disk space is filling up (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
-
+    
       - name: alertmanager
         rules:
           - alert: AlertmanagerFailedReload
@@ -193,7 +195,7 @@ data:
             annotations:
               summary: Reloading an Alertmanager configuration has failed.
               description: Configuration has failed to load for {{ $labels.namespace }}/{{ $labels.pod}}.
-          
+    
           - alert: AlertmanagerFailedToSendAlerts
             expr: (rate(alertmanager_notifications_failed_total{app="-alertmanager"}[5m]) / rate(alertmanager_notifications_total{app="alertmanager"}[5m])) > 0.01
             for: 5m
@@ -202,30 +204,30 @@ data:
             annotations:
               summary: An Alertmanager instance failed to send notifications
               description: Alertmanager {{ $labels.namespace }}/{{ $labels.pod}} failed to send {{ $value | humanizePercentage }} of notifications to {{ $labels.integration }}.
-      
+    
       - name: general
         rules:
-         - alert: Watch
-           expr: vector(1)
-           labels:
+          - alert: Watch
+            expr: vector(1)
+            labels:
               severity: none
-           annotations:
+            annotations:
               summary: "This is a general-purpose alert."
               description: "This alert is for testing purposes."
-         
-         - alerts: InfoInhibitor
-           expr: ALERTS{severity="info"} == 1 unless on(namespace) ALERTS{alertname!="InfoInhibitor",alertstate="firing",severity=~"warning|critical"} == 1
-           labels:
+    
+          - alert: InfoInhibitor
+            expr: ALERTS{severity="info"} == 1 unless on(namespace) ALERTS{alertname!="InfoInhibitor",alertstate="firing",severity=~"warning|critical"} == 1
+            labels:
               severity: none
-              annotations:
-                summary: "정보 수준 알림 억제 메커니즘"
-                description: >
-                  이 알림은 정보(info) 수준 알림을 관리하기 위해 사용됩니다. 
-                  정보 수준 알림은 때로 너무 빈번하게 발생하여 불필요한 소음이 될 수 있지만, 
-                  다른 중요한 알림과 함께 발생할 때는 유용한 정보가 됩니다. 
-                  이 알림은 정보 수준 알림이 발생할 때 활성화되며, 
-                  같은 네임스페이스에서 '경고' 또는 '심각' 수준의 다른 알림이 발생하면 비활성화됩니다.         
-            
+            annotations:
+              summary: "정보 수준 알림 억제 메커니즘"
+              description: >
+                이 알림은 정보(info) 수준 알림을 관리하기 위해 사용됩니다. 
+                정보 수준 알림은 때로 너무 빈번하게 발생하여 불필요한 소음이 될 수 있지만, 
+                다른 중요한 알림과 함께 발생할 때는 유용한 정보가 됩니다. 
+                이 알림은 정보 수준 알림이 발생할 때 활성화되며, 
+                같은 네임스페이스에서 '경고' 또는 '심각' 수준의 다른 알림이 발생하면 비활성화됩니다.         
+    
       - name: config-reloaders
         rules:
           - alert: ReloaderFailure
@@ -236,20 +238,20 @@ data:
             annotations:
               summary: "Reloader 실패 감지"
               description: "{{ $labels.app }} 애플리케이션의 reloader가 지난 5분 동안 성공적으로 리로드하지 못했습니다."
-     
+    
       - name: kube-prometheus-general
-        records: 
-        - record: count:up1
-          expr: count without(instance, pod, node) (up == 1)
-        
-        - record: count:up0
-          expr: count without(instance, pod, node) (up == 1)
-     
+        rules:
+          - record: count:up1
+            expr: count without(instance, pod, node) (up == 1)
+    
+          - record: count:up0
+            expr: count without(instance, pod, node) (up == 0)
+    
       - name: kube-prometheus-node-recording
-        records:
+        rules:
           - record: instance:node_cpu:rate:sum
             expr: count without(cpu, mode) (node_cpu_seconds_total)
-     
+    
       - name: prometheus
         rules:
           - alert: PrometheusBadConfig
@@ -260,7 +262,7 @@ data:
             annotations:
               summary: Failed Prometheus configuration reload
               description: Prometheus {{$labels.namespace}}/{{$labels.pod}} has failed to reload its configuration.
-          
+    
           - alert: PrometheusNotIngestingSamples
             expr: (rate(prometheus_tsdb_head_samples_appended_total{job="datacenter-kube-prometheus-prometheus",namespace="datacenter"}[5m]) <= 0 and (sum without(scrape_job) (prometheus_target_metadata_cache_entries{job="datacenter-kube-prometheus-prometheus",namespace="datacenter"}) > 0 or sum without(rule_group) (prometheus_rule_group_rules{job="datacenter-kube-prometheus-prometheus",namespace="datacenter"}) > 0))
             for: 10m
@@ -269,4 +271,3 @@ data:
             annotations:
               summary: Prometheus is not ingesting samples
               description: Prometheus {{$labels.namespace}}/{{$labels.pod}} is not ingesting samples.
-              
