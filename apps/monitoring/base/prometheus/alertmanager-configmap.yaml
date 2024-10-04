@@ -45,7 +45,11 @@ data:
             title: '{{ template "slack.title" . }}'
             text: '{{ template "slack.text" . }}'
             footer: 'PortfoGram Alertmanager | <{{ template "slack.runbook" . }}|View Runbook>'
-
+            actions:
+            - type: button
+              name: mutebutton
+              text: 'Mute :prometheus:'
+              value: 'text'
       - name: 'slack-critical'
         slack_configs:
           - channel: '#critical-alerts'
