@@ -122,13 +122,10 @@ data:
     *Detailed Information:*
     {{ range .Alerts }}
     ---
+    *Pod:* `{{ .Labels.kubernetes_pod_name }}`
+    *Container:* `{{ .Labels.container }}`
+    *Reason:* `{{ .Labels.reason }}`
     *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    *Additional Labels:*
-    {{- range $key, $value := .Labels }}
-    {{- if and (ne $key "alertname") (ne $key "severity") (ne $key "instance") (ne $key "job") (ne $key "cluster") (ne $key "namespace") }}
-    • *{{ $key }}:* `{{ $value }}`
-    {{- end }}
-    {{- end }}
     {{ end }}
     {{ end }}
 
