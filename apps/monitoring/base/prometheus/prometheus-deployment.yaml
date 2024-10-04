@@ -23,7 +23,7 @@ spec:
             - "--storage.tsdb.path=/prometheus"
             - "--web.enable-lifecycle"
             - "--web.enable-admin-api"
-            - "--web.external-url=http://prometheus.observability.svc.cluster.local:9090"
+            - "--web.external-url=http://127.0.0.1:9090"
             - "--storage.tsdb.min-block-duration=2h"
             - "--storage.tsdb.max-block-duration=2h"
           ports:
