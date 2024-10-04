@@ -15,16 +15,16 @@ data:
     
     rule_files:
       - /etc/prometheus/rules.yml
-
+    
     alerting:
       alertmanagers:
         - static_configs:
             - targets:
                 - alertmanager.observability.svc.cluster.local:9093
           api_version: v2
-    
-    external_url: http://prometheus.observability.svc.cluster.local:9090
-
+    web:
+      external_url: 'http://prometheus.observability.svc.cluster.local:9090'
+      
     scrape_configs:
       - job_name: 'kubernetes-apiservers'
         kubernetes_sd_configs:
