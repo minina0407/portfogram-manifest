@@ -15,7 +15,7 @@ PortfoGram은 개발자들이 포트폴리오를 공유하고, 다른 개발자�
 - Application Repository와 Manifest Repository를 분리
 - 빌드 및 배포 결과를 GitHub Actions 이용하여 Manifest Repository에 반영
 - ArgoCD가 Manifest Repository의 변경사항을 감지하고 Kubernetes 클러스터에 자동 반영
-
+  
 ## 레포지토리 구조 및 설명
 
 ```
@@ -29,6 +29,7 @@ PortfoGram은 개발자들이 포트폴리오를 공유하고, 다른 개발자�
 │   │   │   ├── prometheus
 │   │   │   ├── promtail
 │   │   │   ├── tempo
+|   |   |   ├── otel
 │   │   │   └── thanos
 │   │   └── overlays
 │   │       └── dev
@@ -51,7 +52,7 @@ PortfoGram은 개발자들이 포트폴리오를 공유하고, 다른 개발자�
 ```
 
 - `apps/`: 각 애플리케이션의 Kubernetes 매니페스트 파일들을 포함합니다.
-  - `monitoring/`: 모니터링 스택 (Grafana, Loki, Prometheus, Promtail, Tempo, Thanos)의 매니페스트
+  - `monitoring/`: 모니터링 스택 (Grafana, Loki, Prometheus, Promtail, Tempo, Thanos,Otel)의 매니페스트
   - `redis/`: Redis 서비스의 매니페스트
   - `spring-boot/`: Spring Boot 애플리케이션의 Helm 차트
 - `argocd/`: ArgoCD 관련 설정 파일들
