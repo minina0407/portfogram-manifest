@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis
+  namespace: redis
   labels:
     app: redis
 spec:
@@ -15,6 +16,10 @@ spec:
       labels:
         app: redis
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        readOnlyRootFilesystem: true
       containers:
         - name: redis
           image: redis:latest
@@ -42,11 +47,13 @@ spec:
                 secretKeyRef:
                   name: redis-password
                   key: spring_redis_password
+          securityContext:
+            allowPrivilegeEscalation: false
   volumeClaimTemplates:
     - metadata:
         name: redis-data
       spec:
-        accessModes: [ "ReadWriteOnce" ]
+        accessModes: ["ReadWriteOnce"]
         resources:
           requests:
             storage: 8Gi
