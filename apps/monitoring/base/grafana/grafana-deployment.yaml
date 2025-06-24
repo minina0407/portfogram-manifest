@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grafana
+  namespace: observability
   labels:
     app: grafana
 spec:
@@ -14,19 +15,25 @@ spec:
       labels:
         app: grafana
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        readOnlyRootFilesystem: true
       containers:
         - name: grafana
           image: grafana/grafana:9.5.2
           ports:
             - containerPort: 3000
           volumeMounts:
-          - name: grafana-config
-            mountPath: /etc/grafana/grafana.ini
-            subPath: grafana.ini
-          - name: grafana-datasources
-            mountPath: /etc/grafana/provisioning/datasources
-          - name: grafana-dashboards
-            mountPath: /etc/grafana/provisioning/dashboards
+            - name: grafana-config
+              mountPath: /etc/grafana/grafana.ini
+              subPath: grafana.ini
+            - name: grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: grafana-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+          securityContext:
+            allowPrivilegeEscalation: false
       volumes:
         - name: grafana-config
           configMap:

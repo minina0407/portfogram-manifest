@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: alertmanager
+  namespace: observability
 spec:
   replicas: 1
   selector:
@@ -13,6 +14,10 @@ spec:
       labels:
         app: alertmanager
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        readOnlyRootFilesystem: true
       containers:
         - name: alertmanager
           image: prom/alertmanager:v0.27.0
@@ -51,6 +56,8 @@ spec:
               readOnly: true
             - name: storage-volume
               mountPath: /alertmanager
+          securityContext:
+            allowPrivilegeEscalation: false
       volumes:
         - name: config-volume
           configMap:
