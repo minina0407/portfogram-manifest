@@ -18,7 +18,6 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
-        readOnlyRootFilesystem: true
       containers:
         - name: grafana
           image: grafana/grafana:9.5.2
@@ -34,6 +33,7 @@ spec:
               mountPath: /etc/grafana/provisioning/dashboards
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
       volumes:
         - name: grafana-config
           configMap:

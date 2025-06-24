@@ -17,7 +17,6 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
-        readOnlyRootFilesystem: true
       serviceAccountName: prometheus
       containers:
         - name: prometheus
@@ -60,6 +59,7 @@ spec:
                   fieldPath: metadata.name
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
         - name: thanos-sidecar
           image: quay.io/thanos/thanos:v0.31.0
           args:
@@ -77,6 +77,7 @@ spec:
               mountPath: /etc/thanos
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
       volumes:
         - name: prometheus-config
           configMap:

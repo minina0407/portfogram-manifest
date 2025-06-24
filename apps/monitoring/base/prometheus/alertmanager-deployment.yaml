@@ -17,7 +17,6 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
-        readOnlyRootFilesystem: true
       containers:
         - name: alertmanager
           image: prom/alertmanager:v0.27.0
@@ -58,6 +57,7 @@ spec:
               mountPath: /alertmanager
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
       volumes:
         - name: config-volume
           configMap:
