@@ -6,16 +6,16 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/minina0407/portfogram-manifest.git
+    repoURL: https://github.com/minina0407/portfogram-manifest
     targetRevision: HEAD
     path: apps/monitoring/overlays/dev
     kustomize:
-      buildOptions:
-        - --enable-helm
+      buildOptions: --enable-helm
   destination:
-    server: 'https://kubernetes.default.svc'
+    server: "https://kubernetes.default.svc"
     namespace: observability
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - Validate=false
