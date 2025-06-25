@@ -1,4 +1,4 @@
-apiVersion: opentelemetry.io/v1alpha1
+apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: otel-collector
@@ -122,7 +122,6 @@ spec:
         endpoint: tempo.observability.svc.cluster.local:4317
         tls:
           insecure: true
-    // TODO : multi exporters : Loki / Prometheus / 이후 하나 더 추가 
       loki:
         endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
       prometheusremotewrite:

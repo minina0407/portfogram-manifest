@@ -19,7 +19,6 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
-        readOnlyRootFilesystem: true
       containers:
         - name: redis
           image: redis:latest
