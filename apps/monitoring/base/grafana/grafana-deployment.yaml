@@ -33,7 +33,6 @@ spec:
               mountPath: /etc/grafana/provisioning/dashboards
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
       volumes:
         - name: grafana-config
           configMap:
