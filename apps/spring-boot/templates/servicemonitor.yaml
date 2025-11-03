@@ -10,7 +10,7 @@ spec:
     matchLabels:
       {{- include "app.selectorLabels" . | nindent 8 }}
   endpoints:
-    - port: http-management
+    - port: management
       scrapeTimeout: 1s
       scheme: http
       path: {{ .Values.metrics.path }}

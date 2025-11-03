@@ -9,6 +9,9 @@ image:
 fullnameOverride: ""
 nameOverride: ""
 
+# Replica 설정
+replicaCount: 3
+
 # Security
 podSecurityContext:
   runAsNonRoot: true
@@ -76,6 +79,12 @@ secret:
 
 otel:
   exporterOtlpEndpoint: http://tempo.tempo:4317
+
+# Deployment 전략 설정
+strategy:
+  rollingUpdate:
+    maxSurge: 1        # 동시에 추가로 올릴 수 있는 Pod 수
+    maxUnavailable: 0  # 서비스 중단 허용할 Pod 수 (0 = 무중단)
 
 # 공통 Ingress 설정
 ingress:

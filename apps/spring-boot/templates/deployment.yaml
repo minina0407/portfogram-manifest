@@ -8,6 +8,12 @@ metadata:
     app.kubernetes.io/name: portfogram-server
 spec:
   revisionHistoryLimit: 0
+  replicas: {{ .Values.replicaCount | default 2 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge | default 1 }}
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable | default 0 }}
   selector:
     matchLabels:
       app.kubernetes.io/instance: spring
