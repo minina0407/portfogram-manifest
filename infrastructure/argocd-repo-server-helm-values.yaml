@@ -1,0 +1,19 @@
+# Argo CD Helm 차트 values.yaml 예시
+# Kustomize Helm 지원을 위한 repo-server 설정
+
+repoServer:
+  # 방법 1: 환경 변수 사용 (권장)
+  env:
+    - name: KUSTOMIZE_BUILD_OPTIONS
+      value: "--enable-helm"
+  
+  # 방법 2: extraArgs 사용 (대안)
+  # extraArgs:
+  #   - --kustomize-build-options
+  #   - --enable-helm
+
+# 사용법:
+# 1. 이 파일을 values-kustomize-helm.yaml로 저장
+# 2. 기존 values.yaml과 병합 또는 별도로 사용
+# 3. helm upgrade argocd argo/argocd -n argocd -f values.yaml -f values-kustomize-helm.yaml
+
