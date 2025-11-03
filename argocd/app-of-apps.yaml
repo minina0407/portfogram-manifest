@@ -10,6 +10,9 @@ spec:
     repoURL: https://github.com/minina0407/portfogram-manifest.git
     targetRevision: HEAD
     path: argocd/applications
+    kustomize:
+      enableHelm: true
+      buildOptions: --enable-helm
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -17,6 +20,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-  kustomize:
-    enableHelm: true
-    buildOptions: --enable-helm
