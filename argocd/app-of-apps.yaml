@@ -17,3 +17,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
+  kustomize:
+    enableHelm: true
+    buildOptions: --enable-helm
