@@ -8,6 +8,3 @@ helmCharts:
     namespace: observability
     valuesFile: values.yaml
     version: 6.11.2
-
-helmGlobals:
-  chartHome: charts
