@@ -6,12 +6,11 @@ repoServer:
   env:
     - name: KUSTOMIZE_BUILD_OPTIONS
       value: "--enable-helm"
-  
+
   # 방법 2: extraArgs 사용 (대안)
   # extraArgs:
   #   - --kustomize-build-options
   #   - --enable-helm
-
 # 사용법:
 # 1. 이 파일을 values-kustomize-helm.yaml로 저장
 # 2. 기존 values.yaml과 병합 또는 별도로 사용
