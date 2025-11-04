@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: observability
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
@@ -21,6 +23,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - Validate=false
+      - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true
     retry:
       limit: 5
       backoff:

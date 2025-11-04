@@ -21,10 +21,6 @@ spec:
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
-      loki:
-        protocols:
-          http:
-            endpoint: 0.0.0.0:3100
       k8s_events:
         auth_type: serviceAccount
       prometheus:
@@ -153,7 +149,7 @@ spec:
           processors: [k8sattributes, memory_limiter, batch]
           exporters: [otlp/tempo, logging]
         logs:
-          receivers: [otlp, loki]
+          receivers: [otlp, k8s_events]
           processors: [k8sattributes, resource, memory_limiter, batch]
           exporters: [loki, logging]
         metrics:
