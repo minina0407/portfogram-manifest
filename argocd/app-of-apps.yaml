@@ -42,3 +42,17 @@ spec:
       allowEmpty: false
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    # 하위 Application들의 managedFields 차이 무시
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /metadata/managedFields
