@@ -65,35 +65,8 @@ spec:
         - name: alertmanager-secrets
           secret:
             secretName: alertmanager-secrets
+            # Secret이 없어도 Pod가 시작되도록 optional 설정
+            # 사용자가 직접 Secret을 생성할 수 있음
+            optional: true
         - name: storage-volume
           emptyDir: {}
----
-# SealedSecret이 복호화되지 않을 경우를 대비한 빈 Secret
-# SealedSecret Controller가 Secret을 생성하면 이 Secret은 무시됨
-apiVersion: v1
-kind: Secret
-metadata:
-  name: alertmanager-secrets
-  namespace: observability
-  annotations:
-    # SealedSecret이 생성한 Secret이 있으면 이것을 덮어쓰지 않도록
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-type: Opaque
-stringData:
-  # 빈 값 (alertmanager가 시작되도록 최소한의 Secret 제공)
-  # SealedSecret이 복호화되면 이 값이 덮어써짐
-  slack_api_url: ""
----
-# SealedSecret이 복호화되면 위의 빈 Secret을 덮어씀
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
-metadata:
-  name: alertmanager-secrets
-  namespace: observability
-spec:
-  encryptedData:
-    slack_api_url: AgBhYtnOEYDc2uQ4zyWket4sp6wkbK6jRTsjFopFIBG/Rk/N1mP+WUpxHAdweyycz/oqWfOU+nA0/eAjDJBZ6OADrfq/ASZRmJfLZBVElUhAuQA0WzRDBYpcy5K2ANqJWcLA6n7bcGTwvBz6w1Ob+xUGWyCgMUDGjEFaenXivbQdXz7Vh+VTxGobZjXegl/4jsDcIlx/fycJzXb3iU1k+JL4sfIqXcO6ymyXDLbtu7PCFMkREQ1G47CazR8fH7mLKhxpqgeUu6/b+pgYIaOJG/pEpDPIgJoWGdI5fSAfKT8OQ0vkVSIIjodUvKtaxMPMD27wH1dnZeyXzvM+AJKo7ZQezt2XDcYkNMg3kcCxVXjgXOggEAoinbnWUIvE3CpjRyCdaNbvw6nyChNmCiI8J6nI38s1pWmmQj7f7bUo4iPW+1w2QAlA62v5kGYoQ8CrzGF5H/Ue5f7toCt6bYL4fQvsnBg/4Yfn9LyXTVODtU6N+LE+ChlVzyIBPmFCtxJoqp/OmZCaxTobwREZksZP2aXMfRpMtZgA6KKfsWF/gL8y2ywclnTQd/PTrGRQVOs5QQkEYspLJ4rVzMLEGcDWnaR+GXpGOehf5Sy7n5TsDDvxlZQ3boC0P3Im50oI5KzAy32L971T5LFeaVqDyLGVA4niCiW8eGgNpdOmaLpUbfJxTeH9CvWApmyE5nt84SgI4eba9XHr4zZJXlhO4Ds9jWIrt3WLpZxwxOiDf46yr46pLyIc7OZ10RkLytNc8NyHx73hPy1R9AoTpJAcBIarpFMYgdPiiAiGNtSuZz3GrdeC53A=
-  template:
-    metadata:
-      name: alertmanager-secrets
-      namespace: observability
