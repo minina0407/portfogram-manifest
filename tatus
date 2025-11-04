@@ -1,0 +1,11 @@
+[1mdiff --git a/argocd/app-of-apps.yaml b/argocd/app-of-apps.yaml[m
+[1mindex 18c5c20..ee6a7a5 100644[m
+[1m--- a/argocd/app-of-apps.yaml[m
+[1m+++ b/argocd/app-of-apps.yaml[m
+[36m@@ -17,3 +17,6 @@[m [mspec:[m
+     automated:[m
+       prune: true[m
+       selfHeal: true[m
+[32m+[m[32m  kustomize:[m
+[32m+[m[32m    enableHelm: true[m
+[32m+[m[32m    buildOptions: --enable-helm[m

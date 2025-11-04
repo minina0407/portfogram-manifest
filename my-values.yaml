@@ -1,0 +1,11 @@
+USER-SUPPLIED VALUES:
+configs:
+  params:
+    server.insecure: true
+server:
+  ingress:
+    enabled: true
+    hosts:
+    - argocd.local
+  service:
+    type: NodePort
