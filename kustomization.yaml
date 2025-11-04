@@ -4,6 +4,6 @@ kind: Kustomization
 
 resources:
   - applications/monitoring.yaml
-  - applications/sping-boot.yaml
+  - applications/spring-boot.yaml
   - argocd/app-of-apps.yaml
   - applications/redis.yaml

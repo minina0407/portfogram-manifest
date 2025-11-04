@@ -23,6 +23,9 @@ kind: Application
 metadata:
   name: portfogram
   namespace: argocd
+  annotations:
+    # bootstrap(sync-wave: "0") 이후에 실행되도록 설정
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
@@ -36,3 +39,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
