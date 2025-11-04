@@ -65,6 +65,8 @@ spec:
         - name: alertmanager-secrets
           secret:
             secretName: alertmanager-secrets
+            # SealedSecret이 복호화되지 않아도 Pod가 시작되도록 optional로 설정
+            optional: true
         - name: storage-volume
           emptyDir: {}
 ---
