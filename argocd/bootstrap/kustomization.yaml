@@ -4,4 +4,5 @@ kind: Kustomization
 resources:
   - cert-manager.yaml
   - opentelemetry-operator.yaml
+  - sealed-secrets.yaml
 
