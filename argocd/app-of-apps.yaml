@@ -56,3 +56,6 @@ spec:
       kind: Application
       jsonPointers:
         - /metadata/managedFields
+        # syncPolicy 상태는 무시 (하위 앱의 syncPolicy가 유지되도록)
+        - /status
+        - /operation
