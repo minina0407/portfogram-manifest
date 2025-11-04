@@ -79,8 +79,10 @@ probes:
     enabled: true
     path: /actuator/health/liveness
   startup:
+    initialDelaySeconds: 30
     periodSeconds: 10
     failureThreshold: 30
+    timeoutSeconds: 5
 
 secret:
   enabled: true
