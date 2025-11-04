@@ -7,6 +7,9 @@ spec:
     # Let's Encrypt Staging 환경 (rate limit이 없음)
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     email: minina1868@gmail.com
+    # ACME 계정의 private key를 저장할 Secret 참조
+    privateKeySecretRef:
+      name: letsencrypt-dev-account-key
     # ACME HTTP-01 challenge를 위한 solver
     solvers:
     - http01:
@@ -22,6 +25,9 @@ spec:
     # Let's Encrypt Production 환경
     server: https://acme-v02.api.letsencrypt.org/directory
     email: minina1868@gmail.com
+    # ACME 계정의 private key를 저장할 Secret 참조
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
     # ACME HTTP-01 challenge를 위한 solver
     solvers:
     - http01:
