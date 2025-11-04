@@ -16,7 +16,7 @@ spec:
       include: cert-manager-issuers.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    # ClusterIssuer는 cluster-scoped 리소스이므로 namespace 제거
   syncPolicy:
     automated:
       prune: true
