@@ -20,7 +20,6 @@ spec:
       allowEmpty: false
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
       - Validate=false
     retry:
       limit: 5
