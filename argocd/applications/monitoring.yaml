@@ -5,7 +5,8 @@ metadata:
   name: observability
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    # opentelemetry-operator(sync-wave: "0") 이후에 실행되도록 설정
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:
@@ -23,8 +24,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - Validate=false
+      # CRD가 없을 때 dry-run 스킵
       - SkipDryRunOnMissingResource=true
-      - RespectIgnoreDifferences=true
+      # Server-side apply로 대규모 리소스 동기화 성능 개선
       - ServerSideApply=true
     retry:
       limit: 5

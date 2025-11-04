@@ -79,6 +79,7 @@ probes:
     enabled: true
     path: /actuator/health/liveness
   startup:
+    # Spring Boot 애플리케이션 시작 시간 확보
     initialDelaySeconds: 30
     periodSeconds: 10
     failureThreshold: 30

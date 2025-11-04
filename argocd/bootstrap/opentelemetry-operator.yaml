@@ -18,7 +18,6 @@ spec:
             enabled: false
           autoGenerateCert:
             enabled: true
-          failurePolicy: Ignore
   destination:
     server: https://kubernetes.default.svc
     namespace: opentelemetry-operator-system
@@ -28,5 +27,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      # CRD 포함 (OpenTelemetryCollector CRD가 필요)
+      - IncludeCRDs=true
 
 
