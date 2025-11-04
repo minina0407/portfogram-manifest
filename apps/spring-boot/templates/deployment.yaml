@@ -58,8 +58,10 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: management
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds | default 30 }}
             periodSeconds: {{ .Values.probes.startup.periodSeconds }}
             failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+            timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds | default 5 }}
           env:
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
