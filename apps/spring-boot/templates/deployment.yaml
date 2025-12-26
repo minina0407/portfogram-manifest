@@ -44,10 +44,21 @@ spec:
               containerPort: {{ .Values.container.managementPort }}
               protocol: TCP
 
+          resources:
+            requests:
+              cpu: "200m"    
+              memory: "256Mi"  
+            limits:
+              cpu: "500m"     
+              memory: "512Mi"          
+
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.readiness.path }}
               port: management
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: {{ .Values.probes.liveness.path }}
@@ -63,6 +74,8 @@ spec:
             failureThreshold: {{ .Values.probes.startup.failureThreshold }}
             timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds | default 5 }}
           env:
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis.redis.svc.cluster.local"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:

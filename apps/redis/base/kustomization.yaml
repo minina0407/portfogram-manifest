@@ -6,6 +6,7 @@ resources:
   - redis-deployment.yaml
   - redis-service.yaml
   - namespace-redis.yaml
+  - networkpolicy.yaml
 
 configMapGenerator:
   - name: redis-config

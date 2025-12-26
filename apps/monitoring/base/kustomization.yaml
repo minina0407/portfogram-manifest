@@ -3,3 +3,4 @@ kind: Kustomization
 namespace: observability
 resources:
   - namespace-observability.yaml
+  - networkpolicy.yaml

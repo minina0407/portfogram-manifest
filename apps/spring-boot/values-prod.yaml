@@ -109,3 +109,6 @@ ingress:
           service:
             name: spring-portfogram-server
             port: 8080
+
+networkPolicy:
+  enabled: true
