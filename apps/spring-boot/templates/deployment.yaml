@@ -76,6 +76,10 @@ spec:
           env:
             - name: SPRING_DATA_REDIS_HOST
               value: "redis.redis.svc.cluster.local"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              value: "redis"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
