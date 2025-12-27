@@ -1,12 +1,10 @@
-{{- /*
-이 파일은 portfogram 네임스페이스를 restricted 모드로 생성합니다.
-Helm 설치 전 네임스페이스를 먼저 생성하세요.
-*/ -}}
+
 apiVersion: v1
 kind: Namespace
 metadata:
   name: portfogram
   labels:
+    name: portfogram
     pod-security.kubernetes.io/enforce: "restricted"
     pod-security.kubernetes.io/audit: "restricted"
-    pod-security.kubernetes.io/warn: "restricted" 
+    pod-security.kubernetes.io/warn: "restricted"
