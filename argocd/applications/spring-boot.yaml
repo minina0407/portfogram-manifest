@@ -12,7 +12,7 @@ spec:
     path: apps/spring-boot
     helm:
       valueFiles:
-        - values-dev.yaml
+        - values-prod.yaml
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: portfogram
