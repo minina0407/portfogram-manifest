@@ -3,7 +3,7 @@
 # Default values for spring-boot.
 image:
   repository: minimeisme/portfogram-argocd-k8s
-  tag: "2f50204"
+  tag: "ed972ed"
   pullPolicy: Always
 
 fullnameOverride: ""
