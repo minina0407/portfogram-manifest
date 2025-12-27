@@ -26,7 +26,7 @@ jobs:
       - name: Extract commit hash from App Repository
         id: extract_data_app_repo
         run: |
-          COMMIT_HASH_APP_REPO=$(git rev-parse --short HEAD)
+          COMMIT_HASH_APP_REPO=${{ github.event.client_payload.commit_hash }}
           echo "COMMIT_HASH_APP_REPO=$COMMIT_HASH_APP_REPO" >> $GITHUB_ENV
 
       - name: Check out code (Manifest Repository)
