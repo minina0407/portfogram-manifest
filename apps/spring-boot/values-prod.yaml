@@ -88,17 +88,9 @@ strategy:
     maxSurge: 1        # 동시에 추가로 올릴 수 있는 Pod 수
     maxUnavailable: 0  # 서비스 중단 허용할 Pod 수 (0 = 무중단)
 
-spec:
-  rules:
-    - http:
-        paths:
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: spring-portfogram-server
-                port:
-                  number: 8080
+ingress:
+  enabled: false
+
 
 
 networkPolicy:
