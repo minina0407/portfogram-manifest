@@ -41,11 +41,6 @@ spec:
                 configMapKeyRef:
                   name: redis-config
                   key: spring_cache_type
-            - name: spring_redis_password
-              valueFrom:
-                secretKeyRef:
-                  name: redis-password
-                  key: spring_redis_password
           securityContext:
             allowPrivilegeEscalation: false
   volumeClaimTemplates:
