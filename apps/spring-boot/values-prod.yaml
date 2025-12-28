@@ -88,27 +88,18 @@ strategy:
     maxSurge: 1        # 동시에 추가로 올릴 수 있는 Pod 수
     maxUnavailable: 0  # 서비스 중단 허용할 Pod 수 (0 = 무중단)
 
-# 공통 Ingress 설정
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/acme-challenge-type: http01
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-portfogram-server
+                port:
+                  number: 8080
 
-  tls:
-    - hosts:
-        - minimeisme.com
-      secretName: prod-spring-cert-tls
-  hosts:
-    - host: minimeisme.com
-      paths:
-        - path: /api
-          pathType: Prefix
-          service:
-            name: spring-portfogram-server
-            port: 8080
 
 networkPolicy:
   enabled: true
