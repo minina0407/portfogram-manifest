@@ -15,9 +15,9 @@ spec:
       values: |
         admissionWebhooks:
           certManager:
-            enabled: false
-          autoGenerateCert:
             enabled: true
+          autoGenerateCert:
+            enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: opentelemetry-operator-system
@@ -29,5 +29,3 @@ spec:
       - CreateNamespace=true
       # CRD 포함 (OpenTelemetryCollector CRD가 필요)
       - IncludeCRDs=true
-
-
