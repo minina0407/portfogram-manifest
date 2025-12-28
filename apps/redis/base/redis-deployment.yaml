@@ -19,12 +19,30 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
+        fsGroup: 1001 # 추가: 볼륨 그룹 권한도 1001로 맞춤
+
+      # [1] 초기화 컨테이너 추가: /data 폴더의 주인을 1001번으로 변경
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 1001:1001 /data && chmod 700 /data"]
+          securityContext:
+            runAsUser: 0 # Root 권한으로 실행해서 권한 변경 수행
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+
       containers:
         - name: redis
           image: redis:latest
           ports:
             - containerPort: 6379
               name: redis
+
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+
           env:
             - name: spring_redis_host
               valueFrom:
@@ -43,6 +61,7 @@ spec:
                   key: spring_cache_type
           securityContext:
             allowPrivilegeEscalation: false
+
   volumeClaimTemplates:
     - metadata:
         name: redis-data
