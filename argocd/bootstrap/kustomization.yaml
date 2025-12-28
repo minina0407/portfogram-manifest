@@ -6,4 +6,4 @@ resources:
   - cert-manager-issuers.yaml
   - opentelemetry-operator.yaml
   - sealed-secrets.yaml
-
+  - ingress-nginx.yaml

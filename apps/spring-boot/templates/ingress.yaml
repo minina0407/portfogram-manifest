@@ -1,0 +1,47 @@
+{{- if .Values.ingress.enabled -}}
+  {{- $fullName := include "app.name" . -}}
+  {{- $svcPort := .Values.service.port -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                # 서비스 이름이 명시되어 있으면 그것을 쓰고, 없으면 기본 앱 이름을 사용
+                name: {{ if .service }}{{ .service.name | default $fullName }}{{ else }}{{ $fullName }}{{ end }}
+                port:
+                  # 서비스 포트가 명시되어 있으면 그것을 쓰고, 없으면 기본 서비스 포트를 사용
+                  number: {{ if .service }}{{ .service.port | default $svcPort }}{{ else }}{{ $svcPort }}{{ end }}
+          {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- end }}

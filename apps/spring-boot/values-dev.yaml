@@ -109,10 +109,10 @@ ingress:
 
   tls:
     - hosts:
-        - dev.minimeisme.com
+        - dev.portfogram.com
       secretName: dev-spring-cert-tls
   hosts:
-    - host: dev.minimeisme.com
+    - host: dev.portfogram.com
       paths:
         - path: /api
           pathType: Prefix

@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
   annotations:
     # opentelemetry-operator(sync-wave: "0") 이후에 실행되도록 설정
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
   source:
