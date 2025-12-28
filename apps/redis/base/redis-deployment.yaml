@@ -16,21 +16,16 @@ spec:
       labels:
         app: redis
     spec:
+      # [1] Pod 레벨 보안 설정 (가장 중요)
+      # fsGroup: 1001 -> K8s가 볼륨 마운트 시 자동으로 소유권을 1001번으로 변경해줍니다.
+      # runAsNonRoot: true -> 루트 실행을 원천 차단하여 정책을 준수합니다.
       securityContext:
-        runAsNonRoot: true
         runAsUser: 1001
-        fsGroup: 1001 # 추가: 볼륨 그룹 권한도 1001로 맞춤
+        runAsGroup: 1001
+        fsGroup: 1001
+        runAsNonRoot: true
 
-      # [1] 초기화 컨테이너 추가: /data 폴더의 주인을 1001번으로 변경
-      initContainers:
-        - name: fix-permissions
-          image: busybox
-          command: ["sh", "-c", "chown -R 1001:1001 /data && chmod 700 /data"]
-          securityContext:
-            runAsUser: 0 # Root 권한으로 실행해서 권한 변경 수행
-          volumeMounts:
-            - name: redis-data
-              mountPath: /data
+      # [2] initContainer 제거함 (정책 위반 원인 삭제)
 
       containers:
         - name: redis
@@ -39,6 +34,7 @@ spec:
             - containerPort: 6379
               name: redis
 
+          # [3] 볼륨 마운트 (데이터 저장 경로)
           volumeMounts:
             - name: redis-data
               mountPath: /data
@@ -59,6 +55,7 @@ spec:
                 configMapKeyRef:
                   name: redis-config
                   key: spring_cache_type
+
           securityContext:
             allowPrivilegeEscalation: false
 
