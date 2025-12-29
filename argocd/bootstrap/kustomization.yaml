@@ -7,3 +7,4 @@ resources:
   - opentelemetry-operator.yaml
   - sealed-secrets.yaml
   - ingress-nginx.yaml
+  - argocd-ingress.yaml
