@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ include "app.name" . }}
   namespace: {{ .Release.Namespace }}
@@ -10,10 +10,11 @@ spec:
   revisionHistoryLimit: 0
   replicas: {{ .Values.replicaCount | default 2 }}
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge | default 1 }}
-      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable | default 0 }}
+    blueGreen:
+      activeService: {{ .Values.rollout.blueGreen.activeService | default "spring-portfogram-server" }}
+      previewService: {{ .Values.rollout.blueGreen.previewService | default "spring-portfogram-server-preview" }}
+      autoPromotionEnabled: {{ .Values.rollout.blueGreen.autoPromotionEnabled | default false }}
+      scaleDownDelaySeconds: {{ .Values.rollout.blueGreen.scaleDownDelaySeconds | default 30 }}
   selector:
     matchLabels:
       app.kubernetes.io/instance: spring

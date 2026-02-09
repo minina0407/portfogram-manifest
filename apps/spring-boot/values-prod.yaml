@@ -82,6 +82,14 @@ secret:
 otel:
   exporterOtlpEndpoint: http://tempo.tempo:4317
 
+# Argo Rollouts Blue/Green 설정
+rollout:
+  blueGreen:
+    activeService: spring-portfogram-server
+    previewService: spring-portfogram-server-preview
+    autoPromotionEnabled: false
+    scaleDownDelaySeconds: 30
+
 # Deployment 전략 설정
 strategy:
   rollingUpdate:

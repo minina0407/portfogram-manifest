@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-portfogram-server-preview
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+    - name: management
+      port: {{ .Values.container.managementPort }}
+      targetPort: management
+      protocol: TCP
+  selector:
+    app.kubernetes.io/instance: spring
+    app.kubernetes.io/name: portfogram-server
+
