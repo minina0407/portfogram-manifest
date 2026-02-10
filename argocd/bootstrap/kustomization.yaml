@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - cert-manager.yaml
   - cert-manager-issuers.yaml
+  - argo-rollouts.yaml
   - opentelemetry-operator.yaml
   - sealed-secrets.yaml
   - ingress-nginx.yaml

@@ -1,21 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: promtail
+  name: argo-rollouts
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
-  destination:
-    namespace: observability
-    server: https://kubernetes.default.svc
   source:
-    repoURL: https://github.com/minina0407/portfogram-manifest.git
-    targetRevision: HEAD
-    path: apps/monitoring/base/promtail
-    kustomize:
-      buildOptions: "--enable-helm"
+    repoURL: https://argoproj.github.io/argo-helm
+    chart: argo-rollouts
+    targetRevision: ">=2.0.0"
+    helm:
+      values: |
+        installCRDs: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-rollouts
   syncPolicy:
     automated:
       prune: true

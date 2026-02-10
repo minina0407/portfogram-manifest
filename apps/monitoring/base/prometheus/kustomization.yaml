@@ -9,7 +9,6 @@ resources:
   - alertmanager-deployment.yaml
   - alertmanager-service.yaml
   - thanos-sidecar-configmap.yaml
-  - prometheus-service-monitor.yaml
   - prometheus-service.yaml
   - prometheus-deployment.yaml
   - ingress.yaml

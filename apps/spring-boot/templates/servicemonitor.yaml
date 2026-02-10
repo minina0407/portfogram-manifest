@@ -1,3 +1,4 @@
+{{- if .Values.metrics.enabled }}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -15,3 +16,4 @@ spec:
       scheme: http
       path: {{ .Values.metrics.path }}
       interval: "5s"
+{{- end }}
