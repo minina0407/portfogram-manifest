@@ -1,38 +1,32 @@
-# path: argocd/applications/monitoring.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
   name: observability
   namespace: argocd
-  annotations:
-    # opentelemetry-operator(sync-wave: "0") 이후에 실행되도록 설정
-    argocd.argoproj.io/sync-wave: "3"
 spec:
+  destination:
+    namespace: observability
+    server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: https://github.com/minina0407/portfogram-manifest.git
     path: apps/monitoring/overlays/dev
+    repoURL: https://github.com/minina0407/portfogram-manifest.git
     targetRevision: HEAD
-    kustomize:
-      enableHelm: true
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: observability
   syncPolicy:
     automated:
+      allowEmpty: false
       prune: true
       selfHeal: true
-      allowEmpty: false
-    syncOptions:
-      - CreateNamespace=true
-      - Validate=false
-      # CRD가 없을 때 dry-run 스킵
-      - SkipDryRunOnMissingResource=true
-      # Server-side apply로 대규모 리소스 동기화 성능 개선
-      - ServerSideApply=true
     retry:
-      limit: 5
       backoff:
         duration: 5s
         factor: 2
         maxDuration: 3m
+      limit: 5
+    syncOptions:
+    - CreateNamespace=true
+    - Validate=false
+    - SkipDryRunOnMissingResource=true
+    - ServerSideApply=true

@@ -1,26 +1,59 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: promtail
-  namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/tracking-id: portfogram:argoproj.io/Application:argocd/promtail
+  creationTimestamp: "2026-02-10T11:45:32Z"
+  generation: 4
+  name: promtail
+  namespace: argocd
+  resourceVersion: "11721"
+  uid: 84e9bdfd-8e13-415c-8436-d4fb17caeff8
 spec:
+  destination:
+    namespace: observability
+    server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: https://github.com/minina0407/portfogram-manifest.git
-    targetRevision: HEAD
-    path: apps/monitoring/base/promtail/charts/promtail
     helm:
       releaseName: promtail
       valueFiles:
-        - ../../values.yaml
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: observability
+      - ../../values.yaml
+    path: apps/monitoring/base/promtail/charts/promtail
+    repoURL: https://github.com/minina0407/portfogram-manifest.git
+    targetRevision: HEAD
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+    - CreateNamespace=true
+status:
+  conditions:
+  - lastTransitionTime: "2026-02-10T11:45:32Z"
+    message: 'Failed to load target state: failed to generate manifest for source
+      1 of 1: rpc error: code = Unknown desc = apps/monitoring/base/promtail/charts/promtail:
+      app path does not exist'
+    type: ComparisonError
+  controllerNamespace: argocd
+  health:
+    lastTransitionTime: "2026-02-10T11:45:33Z"
+    status: Healthy
+  reconciledAt: "2026-02-10T11:47:58Z"
+  resourceHealthSource: appTree
+  sync:
+    comparedTo:
+      destination:
+        namespace: observability
+        server: https://kubernetes.default.svc
+      source:
+        helm:
+          releaseName: promtail
+          valueFiles:
+          - ../../values.yaml
+        path: apps/monitoring/base/promtail/charts/promtail
+        repoURL: https://github.com/minina0407/portfogram-manifest.git
+        targetRevision: HEAD
+    revision: HEAD
+    status: Unknown

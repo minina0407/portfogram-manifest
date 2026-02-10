@@ -1,27 +1,174 @@
-# path: argocd/applications/spring-boot.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/tracking-id: portfogram:argoproj.io/Application:argocd/spring-boot
+  creationTimestamp: "2026-02-10T11:45:30Z"
+  generation: 18
   name: spring-boot
   namespace: argocd
+  resourceVersion: "11726"
+  uid: 9e8766eb-5c27-4178-b3f3-0b62f8954624
+operation:
+  initiatedBy:
+    automated: true
+  retry:
+    limit: 5
+  sync:
+    prune: true
+    revision: b8e54b95969f3e5138dc230aa89a1f8ee41b85e3
+    source:
+      helm:
+        valueFiles:
+        - values-prod.yaml
+      path: apps/spring-boot
+      repoURL: https://github.com/minina0407/portfogram-manifest.git
+      targetRevision: HEAD
+    syncOptions:
+    - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
 spec:
+  destination:
+    namespace: portfogram
+    server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: https://github.com/minina0407/portfogram-manifest.git
-    targetRevision: HEAD
-    path: apps/spring-boot
     helm:
       valueFiles:
-        - values-prod.yaml
-  destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: portfogram
+      - values-prod.yaml
+    path: apps/spring-boot
+    repoURL: https://github.com/minina0407/portfogram-manifest.git
+    targetRevision: HEAD
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-      allowEmpty: false
     syncOptions:
-      - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
-      - PruneLast=true
+    - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
+status:
+  controllerNamespace: argocd
+  health:
+    lastTransitionTime: "2026-02-10T11:45:31Z"
+    status: Missing
+  operationState:
+    finishedAt: "2026-02-10T11:48:01Z"
+    message: 'one or more synchronization tasks are not valid. Retrying attempt #5
+      at 11:49AM.'
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        prune: true
+        revision: b8e54b95969f3e5138dc230aa89a1f8ee41b85e3
+        source:
+          helm:
+            valueFiles:
+            - values-prod.yaml
+          path: apps/spring-boot
+          repoURL: https://github.com/minina0407/portfogram-manifest.git
+          targetRevision: HEAD
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
+        - PruneLast=true
+    phase: Running
+    retryCount: 5
+    startedAt: "2026-02-10T11:45:31Z"
+    syncResult:
+      resources:
+      - group: argoproj.io
+        images:
+        - minimeisme/portfogram-argocd-k8s:795bcff0accda5ea73ff5f57f19d4bdb9faf8321
+        kind: Rollout
+        message: Rollout.argoproj.io "" not found
+        name: spring-boot
+        namespace: portfogram
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1alpha1
+      - group: monitoring.coreos.com
+        kind: ServiceMonitor
+        message: The Kubernetes API could not find monitoring.coreos.com/ServiceMonitor
+          for requested resource portfogram/spring-boot. Make sure the "ServiceMonitor"
+          CRD is installed on the destination cluster.
+        name: spring-boot
+        namespace: portfogram
+        status: SyncFailed
+        syncPhase: Sync
+        version: v1
+      revision: b8e54b95969f3e5138dc230aa89a1f8ee41b85e3
+      source:
+        helm:
+          valueFiles:
+          - values-prod.yaml
+        path: apps/spring-boot
+        repoURL: https://github.com/minina0407/portfogram-manifest.git
+        targetRevision: HEAD
+  reconciledAt: "2026-02-10T11:48:01Z"
+  resourceHealthSource: appTree
+  resources:
+  - kind: Namespace
+    name: portfogram
+    status: OutOfSync
+    version: v1
+  - kind: Secret
+    name: database-credentials
+    namespace: portfogram
+    status: OutOfSync
+    version: v1
+  - kind: Service
+    name: spring-portfogram-server
+    namespace: portfogram
+    status: OutOfSync
+    version: v1
+  - kind: Service
+    name: spring-portfogram-server-preview
+    namespace: portfogram
+    status: OutOfSync
+    version: v1
+  - group: argoproj.io
+    kind: Rollout
+    name: spring-boot
+    namespace: portfogram
+    status: OutOfSync
+    version: v1alpha1
+  - group: monitoring.coreos.com
+    kind: ServiceMonitor
+    name: spring-boot
+    namespace: portfogram
+    status: OutOfSync
+    version: v1
+  - group: networking.k8s.io
+    kind: Ingress
+    name: spring-boot
+    namespace: portfogram
+    status: OutOfSync
+    version: v1
+  - group: networking.k8s.io
+    kind: NetworkPolicy
+    name: portfogram-network-policy
+    namespace: portfogram
+    status: OutOfSync
+    version: v1
+  sourceHydrator: {}
+  sourceType: Helm
+  summary: {}
+  sync:
+    comparedTo:
+      destination:
+        namespace: portfogram
+        server: https://kubernetes.default.svc
+      source:
+        helm:
+          valueFiles:
+          - values-prod.yaml
+        path: apps/spring-boot
+        repoURL: https://github.com/minina0407/portfogram-manifest.git
+        targetRevision: HEAD
+    revision: b8e54b95969f3e5138dc230aa89a1f8ee41b85e3
+    status: OutOfSync
