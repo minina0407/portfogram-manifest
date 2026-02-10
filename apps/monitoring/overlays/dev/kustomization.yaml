@@ -4,8 +4,7 @@ kind: Kustomization
 
 resources:
     - ../../base/prometheus
-    - ../../base/grafana
-    - ../../base/promtail
+    - ../../base/grafanal
     - ../../base/loki
     - ../../base/tempo
     - ../../base/thanos

@@ -5,4 +5,4 @@ resources:
   - monitoring.yaml
   - spring-boot.yaml
   - redis.yaml
-
+  - promtail.yaml
