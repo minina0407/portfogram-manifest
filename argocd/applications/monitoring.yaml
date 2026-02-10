@@ -26,7 +26,6 @@ spec:
         maxDuration: 3m
       limit: 5
     syncOptions:
-    - CreateNamespace=true
-    - Validate=false
-    - SkipDryRunOnMissingResource=true
-    - ServerSideApply=true
+      - CreateNamespace=true
+      - Validate=false
+      - SkipDryRunOnMissingResource=true
