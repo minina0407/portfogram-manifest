@@ -13,6 +13,8 @@ spec:
     repoURL: https://github.com/minina0407/portfogram-manifest.git
     path: apps/monitoring/overlays/dev
     targetRevision: HEAD
+    kustomize:
+      enableHelm: true
   destination:
     server: https://kubernetes.default.svc
     namespace: observability
