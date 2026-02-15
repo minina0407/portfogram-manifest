@@ -15,7 +15,7 @@ spec:
     targetRevision: HEAD
     path: apps/monitoring/base/promtail
     kustomize:
-      buildOptions: "--enable-helm"
+      enableHelm: true
   syncPolicy:
     automated:
       prune: true

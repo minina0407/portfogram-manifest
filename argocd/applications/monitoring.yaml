@@ -14,6 +14,8 @@ spec:
     path: apps/monitoring/overlays/dev
     repoURL: https://github.com/minina0407/portfogram-manifest.git
     targetRevision: HEAD
+    kustomize:
+      enableHelm: true
   syncPolicy:
     automated:
       allowEmpty: false
