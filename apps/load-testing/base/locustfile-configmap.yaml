@@ -1,21 +1,14 @@
 ##############################################################
-# 부하 테스트 시나리오: 로그인 API DB 병목 검증
+# PortfoGram 부하 테스트 시나리오
 #
-# 배경:
-#   OTel 트레이스 분석에서 UserRepository.findByEmail()
-#   단일 요청 기준 221.88ms 소요 확인
-#   → 동시 부하 환경에서 p95/p99 레이턴시 정량 측정 필요
+# 사용자 행동 모델:
+#   - EyeballerUser  (60%): 피드 탐색 위주 (비로그인)
+#   - InteractiveUser(30%): 로그인 → 피드 → 상세 → 좋아요
+#   - ActiveUser     (10%): 로그인 → 피드 → 상세 → 댓글 → 재조회
 #
-# 최적화 가설:
-#   HikariCP 기본 pool-size(10)에서 동시 100명 접근 시
-#   커넥션 대기(Connection Timeout) 가 p99 급증의 원인
-#
-# 사전 준비:
-#   아래 SQL로 테스트 유저 50명 DB에 생성 필요
+# 사전 준비 (MySQL):
 #   INSERT INTO user (nickname, password, email, name, role)
-#   VALUES
-#     ('loadtest01', '{bcrypt}$2a$10$...', 'loadtest01@portfogram.com', 'Load Test 01', 'ROLE_USER'),
-#     ...
+#   VALUES ('lb1772269001XX', ..., 'lb177226900101@portfogram.com', ...)
 #   → scripts/load-test-seed.sql 참고
 ##############################################################
 apiVersion: v1
@@ -26,62 +19,298 @@ metadata:
 data:
   locustfile.py: |
     """
-    PortfoGram 로그인 API 부하 테스트
-    ===================================
-    목적:
-      - findByEmail 221.88ms 지연이 동시 부하에서 p95/p99에 미치는 영향 측정
-      - HikariCP 커넥션 풀 병목 여부 OTel 트레이스로 확인
-      - 최적화 전후 레이턴시 정량 비교
+    PortfoGram 부하 테스트 - 다중 사용자 행동 시나리오
+    =====================================================
+    사용자 행동 모델:
+      EyeballerUser  (60%): 피드 스크롤 → 가끔 포트폴리오 상세 조회
+      InteractiveUser(30%): 로그인 → 피드 → 상세 → 좋아요
+      ActiveUser     (10%): 로그인 → 피드 → 상세 → 댓글 → 재조회
 
-    측정 지표:
-      - p50 / p95 / p99 레이턴시 (Locust 리포트)
-      - findByEmail span 시간 분포 (Grafana Tempo)
-      - HikariCP 커넥션 대기 시간 (Grafana + Prometheus)
+    측정 목표:
+      - HikariCP 커넥션 풀 병목: p95/p99 레이턴시 변화
+      - OTel Tempo: findByEmail span 대기 시간 분포
+      - Grafana: hikaricp_connections_pending 증감 추이
     """
-    from locust import HttpUser, task, between
+    from locust import HttpUser, task, between, constant_pacing
+    from locust import LoadTestShape
     import random
+    import json
 
-    # 사전 생성된 테스트 유저 50명
-    # DB에 미리 INSERT 필요 (scripts/load-test-seed.sql 참고)
+    # ── 테스트 계정 (DB seed 필요) ──────────────────────────────
     PREFIX = "lb1772269001"
     TEST_USERS = [
         {"email": f"{PREFIX}{i:02d}@portfogram.com", "password": "LoadTest9999"}
         for i in range(1, 51)
     ]
 
-    class LoginUser(HttpUser):
-        # 실제 사용자 행동 패턴 반영: 요청 간 1~2초 대기
-        wait_time = between(1, 2)
+    # ── 공통 헬퍼 ─────────────────────────────────────────────
+    def do_login(client, credentials):
+        """로그인 후 access_token 반환. 실패시 None."""
+        with client.post(
+            "/api/v1/auth/login",
+            json=credentials,
+            headers={"Content-Type": "application/json"},
+            name="POST /auth/login",
+            catch_response=True,
+        ) as resp:
+            if resp.status_code == 200:
+                resp.success()
+                try:
+                    return resp.json().get("accessToken") or resp.json().get("access_token")
+                except Exception:
+                    return None
+            else:
+                resp.failure(f"login failed {resp.status_code}: {resp.text[:200]}")
+                return None
+
+    def fetch_portfolio_ids(client, page=0, size=10):
+        """공개 피드에서 portfolioId 목록 반환."""
+        with client.get(
+            f"/api/v1/portfolios?page={page}&size={size}",
+            name="GET /portfolios (feed)",
+            catch_response=True,
+        ) as resp:
+            if resp.status_code == 200:
+                resp.success()
+                try:
+                    data = resp.json()
+                    # 응답 구조에 따라 파싱 (content[] 또는 직접 list)
+                    items = data.get("content") or data if isinstance(data, list) else []
+                    ids = [item.get("portfolioId") or item.get("id") for item in items if item]
+                    return [pid for pid in ids if pid is not None]
+                except Exception:
+                    return []
+            else:
+                resp.failure(f"feed failed {resp.status_code}")
+                return []
+
+    # ── EyeballerUser (60%): 비로그인 피드 탐색 ──────────────
+    class EyeballerUser(HttpUser):
+        """
+        소셜 피드를 훑어보는 일반 방문자.
+        DB READ 집중 → HikariCP 읽기 커넥션 소비 확인.
+        """
+        weight = 60
+        wait_time = between(2, 5)
 
         def on_start(self):
-            """
-            각 가상 유저마다 다른 테스트 계정 사용
-            → 동일 email로 집중되는 캐시 히트 효과 제거
-            → 실제 findByEmail DB 조회가 발생하도록 유도
-            """
-            self.user_credentials = random.choice(TEST_USERS)
+            self._portfolio_ids = []
 
-        @task
-        def login(self):
-            """
-            로그인 API 호출 흐름:
-              POST /api/v1/auth/login
-                → CustomUserDetailService.loadUserByUsername(email)
-                → UserRepository.findByEmail(email)   ← 핵심 측정 지점
-                → BCrypt 비밀번호 검증
-                → Redis SETEX refreshToken               ← Write-around
-            """
-            with self.client.post(
-                "/api/v1/auth/login",
-                json=self.user_credentials,
-                headers={"Content-Type": "application/json"},
-                name="POST /api/v1/auth/login",
-                catch_response=True
-            ) as response:
-                if response.status_code == 200:
-                    response.success()
-                elif response.status_code == 401:
-                    # 테스트 유저 미생성 시 발생 → seed SQL 실행 필요
-                    response.failure(f"Auth failed (seed 미실행?): {response.text}")
+        @task(5)
+        def browse_feed(self):
+            """피드 목록 조회 (페이지 랜덤)"""
+            page = random.randint(0, 3)
+            ids = fetch_portfolio_ids(self.client, page=page, size=10)
+            if ids:
+                self._portfolio_ids = ids
+
+        @task(3)
+        def view_portfolio_detail(self):
+            """포트폴리오 상세 조회"""
+            if not self._portfolio_ids:
+                ids = fetch_portfolio_ids(self.client, page=0, size=10)
+                if not ids:
+                    return
+                self._portfolio_ids = ids
+            pid = random.choice(self._portfolio_ids)
+            with self.client.get(
+                f"/api/v1/portfolios/{pid}",
+                name="GET /portfolios/{id}",
+                catch_response=True,
+            ) as resp:
+                if resp.status_code in (200, 404):
+                    resp.success()
                 else:
-                    response.failure(f"Unexpected {response.status_code}: {response.text}")
+                    resp.failure(f"detail failed {resp.status_code}")
+
+        @task(2)
+        def view_comments(self):
+            """댓글 조회 (공개 API)"""
+            if not self._portfolio_ids:
+                return
+            pid = random.choice(self._portfolio_ids)
+            with self.client.get(
+                f"/api/v1/portfolios/{pid}/comments",
+                name="GET /portfolios/{id}/comments",
+                catch_response=True,
+            ) as resp:
+                if resp.status_code in (200, 404):
+                    resp.success()
+                else:
+                    resp.failure(f"comments failed {resp.status_code}")
+
+    # ── InteractiveUser (30%): 로그인 후 좋아요 ──────────────
+    class InteractiveUser(HttpUser):
+        """
+        로그인 후 피드를 보고 좋아요를 누르는 사용자.
+        로그인 → READ → WRITE 패턴으로 커넥션 풀 압박.
+        """
+        weight = 30
+        wait_time = between(1, 3)
+
+        def on_start(self):
+            self._token = None
+            self._portfolio_ids = []
+            credentials = random.choice(TEST_USERS)
+            self._token = do_login(self.client, credentials)
+
+        @task(4)
+        def browse_and_like(self):
+            """피드 조회 후 랜덤 포트폴리오 좋아요"""
+            ids = fetch_portfolio_ids(self.client, page=random.randint(0, 2), size=10)
+            if not ids:
+                return
+            self._portfolio_ids = ids
+            pid = random.choice(ids)
+
+            # 상세 조회
+            with self.client.get(
+                f"/api/v1/portfolios/{pid}",
+                name="GET /portfolios/{id}",
+                catch_response=True,
+            ) as resp:
+                if resp.status_code not in (200, 404):
+                    resp.failure(f"detail {resp.status_code}")
+
+            # 좋아요 (JWT 필요)
+            if self._token:
+                with self.client.post(
+                    f"/api/v1/portfolios/{pid}/likes",
+                    headers={
+                        "Authorization": f"Bearer {self._token}",
+                        "Content-Type": "application/json",
+                    },
+                    name="POST /portfolios/{id}/likes",
+                    catch_response=True,
+                ) as resp:
+                    # 이미 좋아요(409) 또는 성공(200/201) 모두 허용
+                    if resp.status_code in (200, 201, 409, 404):
+                        resp.success()
+                    elif resp.status_code == 401:
+                        # 토큰 만료 → 재로그인
+                        credentials = random.choice(TEST_USERS)
+                        self._token = do_login(self.client, credentials)
+                        resp.failure("token expired, re-login")
+                    else:
+                        resp.failure(f"like failed {resp.status_code}: {resp.text[:100]}")
+
+        @task(2)
+        def view_latest_feed(self):
+            """팔로잉 최신 피드 조회 (JWT 필요)"""
+            if not self._token:
+                return
+            with self.client.get(
+                "/api/v1/portfolios/latest?page=0&size=10",
+                headers={"Authorization": f"Bearer {self._token}"},
+                name="GET /portfolios/latest",
+                catch_response=True,
+            ) as resp:
+                if resp.status_code in (200, 204):
+                    resp.success()
+                elif resp.status_code == 401:
+                    credentials = random.choice(TEST_USERS)
+                    self._token = do_login(self.client, credentials)
+                    resp.failure("token expired")
+                else:
+                    resp.failure(f"latest failed {resp.status_code}")
+
+    # ── ActiveUser (10%): 로그인 후 댓글 작성 ────────────────
+    class ActiveUser(HttpUser):
+        """
+        적극적으로 댓글을 남기는 파워 유저.
+        WRITE 비율이 높아 트랜잭션 커넥션 소비 극대화.
+        """
+        weight = 10
+        wait_time = between(2, 4)
+
+        def on_start(self):
+            self._token = None
+            self._portfolio_ids = []
+            credentials = random.choice(TEST_USERS)
+            self._token = do_login(self.client, credentials)
+
+        @task(3)
+        def browse_and_comment(self):
+            """피드 조회 → 상세 조회 → 댓글 작성 → 댓글 재조회"""
+            ids = fetch_portfolio_ids(self.client, page=random.randint(0, 2), size=10)
+            if not ids:
+                return
+            pid = random.choice(ids)
+
+            # 포트폴리오 상세
+            with self.client.get(
+                f"/api/v1/portfolios/{pid}",
+                name="GET /portfolios/{id}",
+                catch_response=True,
+            ) as resp:
+                if resp.status_code not in (200, 404):
+                    resp.failure(f"detail {resp.status_code}")
+                    return
+
+            # 댓글 작성 (JWT 필요)
+            if self._token:
+                comment_body = {"content": f"테스트 댓글 {random.randint(1000, 9999)}"}
+                with self.client.post(
+                    f"/api/v1/portfolios/{pid}/comments",
+                    json=comment_body,
+                    headers={
+                        "Authorization": f"Bearer {self._token}",
+                        "Content-Type": "application/json",
+                    },
+                    name="POST /portfolios/{id}/comments",
+                    catch_response=True,
+                ) as resp:
+                    if resp.status_code in (200, 201, 404):
+                        resp.success()
+                    elif resp.status_code == 401:
+                        credentials = random.choice(TEST_USERS)
+                        self._token = do_login(self.client, credentials)
+                        resp.failure("token expired, re-login")
+                    else:
+                        resp.failure(f"comment failed {resp.status_code}: {resp.text[:100]}")
+
+            # 댓글 재조회 (결과 확인)
+            with self.client.get(
+                f"/api/v1/portfolios/{pid}/comments",
+                name="GET /portfolios/{id}/comments",
+                catch_response=True,
+            ) as resp:
+                if resp.status_code in (200, 404):
+                    resp.success()
+                else:
+                    resp.failure(f"re-fetch comments failed {resp.status_code}")
+
+        @task(1)
+        def view_user_profile(self):
+            """다른 사용자 프로필 조회"""
+            user_id = random.randint(1, 50)
+            with self.client.get(
+                f"/api/v1/users/profile?userId={user_id}",
+                name="GET /users/profile",
+                catch_response=True,
+            ) as resp:
+                if resp.status_code in (200, 404):
+                    resp.success()
+                else:
+                    resp.failure(f"profile failed {resp.status_code}")
+
+    # ── Scenario C: 스파이크 테스트용 Shape ───────────────────
+    # locust-test-scenario-c.yaml에서만 사용
+    # class SpikeTestShape(LoadTestShape):
+    #   """
+    #   1분 워밍업(20명) → 2분 급증(200명) → 5분 유지 → 3분 회복(50명)
+    #   HikariCP 커넥션 포화 시점 및 회복 패턴 측정
+    #   """
+    #   stages = [
+    #       {"duration": 60,  "users": 20,  "spawn_rate": 5},    # 워밍업
+    #       {"duration": 180, "users": 200, "spawn_rate": 30},   # 급증
+    #       {"duration": 480, "users": 200, "spawn_rate": 1},    # 유지
+    #       {"duration": 660, "users": 50,  "spawn_rate": 10},   # 회복
+    #   ]
+    #
+    #   def tick(self):
+    #       run_time = self.get_run_time()
+    #       for stage in self.stages:
+    #           if run_time < stage["duration"]:
+    #               return (stage["users"], stage["spawn_rate"])
+    #       return None

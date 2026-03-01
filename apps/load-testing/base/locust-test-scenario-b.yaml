@@ -1,0 +1,40 @@
+##############################################################
+# [Scenario B] 배포 검증 - Blue-Green 전환 중 부하 유지
+#
+# 목적:
+#   Argo Rollouts Blue-Green 배포 진행 중 지속적인 부하를 유지하여
+#   트래픽 전환 시점의 에러율 및 레이턴시 변화 측정
+#
+# 사용 방법:
+#   1. 이 LocustTest 적용하여 부하 시작 (50명 지속)
+#   2. 부하 진행 중 Argo Rollouts 배포 트리거:
+#      kubectl argo rollouts set image rollout/spring-portfogram-server \
+#        spring-portfogram-server=<new-image> -n portfogram
+#   3. 자동 프로모션 또는 수동 프로모션:
+#      kubectl argo rollouts promote spring-portfogram-server -n portfogram
+#
+# 합격 기준:
+#   - Blue→Green 전환 중 5xx 에러율 < 0.1%
+#   - p95 레이턴시 전환 후 2분 내 정상 복귀
+#   - 전환 시 커넥션 드랍 없음 (Prometheus 확인)
+##############################################################
+apiVersion: locust.io/v1
+kind: LocustTest
+metadata:
+  name: portfogram.scenario-b-deploy
+  namespace: load-testing
+  annotations:
+    test/phase: "scenario-b"
+    test/description: "Blue-Green 배포 중 지속 부하 검증 (50 users, 15min)"
+spec:
+  image: locustio/locust:2.20.0
+  workerReplicas: 2
+  configMap: locust-scripts
+  masterCommandSeed: >-
+    --locustfile /lotest/src/locustfile.py
+    --headless
+    -u 50
+    -r 5
+    --run-time 15m
+    --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080
+  workerCommandSeed: "--locustfile /lotest/src/locustfile.py"

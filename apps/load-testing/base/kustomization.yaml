@@ -4,8 +4,11 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - locustfile-configmap.yaml
-  # 베이스라인 측정 (HikariCP 기본값 pool-size: 10)
-  - locust-test-baseline.yaml
-  # 최적화 후 측정 (HikariCP pool-size: 30)
-  # 베이스라인 결과 확인 후 활성화
-  # - locust-test-optimized.yaml
+  # Scenario A: 혼합 트래픽 기준선 (50 users, 10min) - pool=10 상태
+  - locust-test-scenario-a.yaml
+  # Scenario B: Blue-Green 배포 검증 (50 users, 15min)
+  # → 배포 테스트 시 활성화
+  # - locust-test-scenario-b.yaml
+  # Scenario C: 스파이크 테스트 (→200 users, 11min)
+  # → 스파이크 테스트 시 활성화
+  # - locust-test-scenario-c.yaml

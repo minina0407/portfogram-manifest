@@ -1,0 +1,41 @@
+##############################################################
+# [Scenario C] 스파이크 테스트 - 급격한 트래픽 증가/감소
+#
+# 목적:
+#   단기간 트래픽 폭증 시 HikariCP 커넥션 고갈 시점 및
+#   회복 패턴 측정
+#
+# 단계별 시나리오:
+#   0~1분   : 워밍업 (20명)
+#   1~3분   : 급증   (20→200명, 30명/초)
+#   3~8분   : 유지   (200명)
+#   8~11분  : 회복   (200→50명)
+#
+# ※ LoadTestShape은 --headless에서 -u/-r 무시하고 Shape tick() 기준 동작
+#   → 이 파일은 단계별 stages 설정이 적용된 별도 locustfile 사용 예정
+#   → 현재는 단순 100→200명 래핑으로 대체
+#
+# HikariCP 최적화 전후 비교:
+#   pool=10 → p99 급증 구간 및 Connection Timeout 발생 확인
+#   pool=30 → 동일 스파이크에서 레이턴시 안정화 여부 확인
+##############################################################
+apiVersion: locust.io/v1
+kind: LocustTest
+metadata:
+  name: portfogram.scenario-c-spike
+  namespace: load-testing
+  annotations:
+    test/phase: "scenario-c"
+    test/description: "스파이크 테스트 (20→200→50 users, 11min)"
+spec:
+  image: locustio/locust:2.20.0
+  workerReplicas: 3
+  configMap: locust-scripts
+  masterCommandSeed: >-
+    --locustfile /lotest/src/locustfile.py
+    --headless
+    -u 200
+    -r 30
+    --run-time 11m
+    --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080
+  workerCommandSeed: "--locustfile /lotest/src/locustfile.py"

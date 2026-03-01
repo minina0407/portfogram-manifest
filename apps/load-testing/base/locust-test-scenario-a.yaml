@@ -1,0 +1,39 @@
+##############################################################
+# [Scenario A] 기준선 측정 - 혼합 트래픽 (Mixed Read/Write)
+#
+# 목적:
+#   실제 사용자 행동(60/30/10 비율)으로 HikariCP 기본 설정(pool=10)
+#   하에서 p95/p99 레이턴시 정량 측정
+#
+# 조건:
+#   - 가상 유저: 50명 (EyeballerUser 30명, Interactive 15명, Active 5명)
+#   - 증가 속도: 5명/초
+#   - 실행 시간: 10분
+#   - HikariCP pool-size: 10 (기본값)
+#
+# 측정 지표:
+#   - Locust: p50/p95/p99 엔드포인트별 레이턴시
+#   - Tempo: findByEmail span 대기 시간 분포
+#   - Prometheus: hikaricp_connections_pending 카운트
+##############################################################
+apiVersion: locust.io/v1
+kind: LocustTest
+metadata:
+  name: portfogram.scenario-a-baseline
+  namespace: load-testing
+  annotations:
+    test/phase: "scenario-a"
+    test/hikaricp-pool-size: "10"
+    test/description: "혼합 트래픽 기준선 측정 (50 users, 10min)"
+spec:
+  image: locustio/locust:2.20.0
+  workerReplicas: 2
+  configMap: locust-scripts
+  masterCommandSeed: >-
+    --locustfile /lotest/src/locustfile.py
+    --headless
+    -u 50
+    -r 5
+    --run-time 10m
+    --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080
+  workerCommandSeed: "--locustfile /lotest/src/locustfile.py"
