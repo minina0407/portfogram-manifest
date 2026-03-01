@@ -47,7 +47,7 @@ metadata:
   name: thanos-compact-data
   namespace: observability
 spec:
-  storageClassName: gp3-immediate
+  storageClassName: gp3
   accessModes:
     - ReadWriteOnce
   resources:
@@ -60,7 +60,7 @@ metadata:
   name: thanos-storage-pvc
   namespace: observability
 spec:
-  storageClassName: gp3-immediate
+  storageClassName: gp3
   accessModes:
     - ReadWriteOnce
   resources:
