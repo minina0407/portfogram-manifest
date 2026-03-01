@@ -11,7 +11,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://absaoss.github.io/locust-k8s-operator/
+    repoURL: https://abdelrhmanhamouda.github.io/locust-k8s-operator/
     chart: locust-k8s-operator
     targetRevision: 0.4.0
     helm:
