@@ -49,7 +49,7 @@ gateway:
 persistence:
   enabled: true
   size: 10Gi
-  storageClassName: standard
+  storageClassName: gp3
 
 # Set deployment mode to single binary
 global:
