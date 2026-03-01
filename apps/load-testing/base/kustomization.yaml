@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - locustfile-configmap.yaml
+  # 베이스라인 측정 (HikariCP 기본값 pool-size: 10)
+  - locust-test-baseline.yaml
+  # 최적화 후 측정 (HikariCP pool-size: 30)
+  # 베이스라인 결과 확인 후 활성화
+  # - locust-test-optimized.yaml

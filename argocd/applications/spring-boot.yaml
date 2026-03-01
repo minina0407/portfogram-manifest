@@ -13,7 +13,12 @@ spec:
   source:
     helm:
       valueFiles:
-      - values-prod.yaml
+      - values-dev.yaml
+      parameters:
+      - name: replicaCount
+        value: "1"
+      - name: ingress.enabled
+        value: "false"
     path: apps/spring-boot
     repoURL: https://github.com/minina0407/portfogram-manifest.git
     targetRevision: HEAD

@@ -1,0 +1,41 @@
+##############################################################
+# [2단계] 최적화 후 측정
+#
+# 최적화 내용:
+#   - HikariCP maximum-pool-size: 10 → 30 으로 확장
+#   - Spring Boot values-dev.yaml 에 hikari 설정 추가
+#   - ArgoCD가 변경 감지 후 자동 재배포
+#
+# 동일 조건으로 재측정하여 베이스라인과 비교
+#   → 블로그: 최적화 전후 p95/p99 레이턴시 비교 수치 도출
+##############################################################
+apiVersion: locust.io/v1alpha1
+kind: LocustTest
+metadata:
+  name: portfogram-login-optimized
+  namespace: load-testing
+  annotations:
+    test/phase: "optimized"
+    test/hikaricp-pool-size: "30"
+    test/description: "HikariCP pool 30으로 확장 후 동일 조건 재측정"
+spec:
+  masterImage: locustio/locust:2.20.0
+  workerImage: locustio/locust:2.20.0
+  workerReplicas: 3
+  configMap: locust-scripts
+  locustFile: locustfile.py
+  masterCommandSeed: "--headless -u 100 -r 10 --run-time 5m --host https://dev.portfogram.com"
+  masterResources:
+    requests:
+      cpu: "500m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"
+  workerResources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"

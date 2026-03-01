@@ -1,0 +1,87 @@
+##############################################################
+# 부하 테스트 시나리오: 로그인 API DB 병목 검증
+#
+# 배경:
+#   OTel 트레이스 분석에서 UserRepository.findByEmail()
+#   단일 요청 기준 221.88ms 소요 확인
+#   → 동시 부하 환경에서 p95/p99 레이턴시 정량 측정 필요
+#
+# 최적화 가설:
+#   HikariCP 기본 pool-size(10)에서 동시 100명 접근 시
+#   커넥션 대기(Connection Timeout) 가 p99 급증의 원인
+#
+# 사전 준비:
+#   아래 SQL로 테스트 유저 50명 DB에 생성 필요
+#   INSERT INTO user (nickname, password, email, name, role)
+#   VALUES
+#     ('loadtest01', '{bcrypt}$2a$10$...', 'loadtest01@portfogram.com', 'Load Test 01', 'ROLE_USER'),
+#     ...
+#   → scripts/load-test-seed.sql 참고
+##############################################################
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: locust-scripts
+  namespace: load-testing
+data:
+  locustfile.py: |
+    """
+    PortfoGram 로그인 API 부하 테스트
+    ===================================
+    목적:
+      - findByEmail 221.88ms 지연이 동시 부하에서 p95/p99에 미치는 영향 측정
+      - HikariCP 커넥션 풀 병목 여부 OTel 트레이스로 확인
+      - 최적화 전후 레이턴시 정량 비교
+
+    측정 지표:
+      - p50 / p95 / p99 레이턴시 (Locust 리포트)
+      - findByEmail span 시간 분포 (Grafana Tempo)
+      - HikariCP 커넥션 대기 시간 (Grafana + Prometheus)
+    """
+    from locust import HttpUser, task, between
+    import random
+
+    # 사전 생성된 테스트 유저 50명
+    # DB에 미리 INSERT 필요 (scripts/load-test-seed.sql 참고)
+    PREFIX = "lb1772269001"
+    TEST_USERS = [
+        {"email": f"{PREFIX}{i:02d}@portfogram.com", "password": "LoadTest9999"}
+        for i in range(1, 51)
+    ]
+
+    class LoginUser(HttpUser):
+        # 실제 사용자 행동 패턴 반영: 요청 간 1~2초 대기
+        wait_time = between(1, 2)
+
+        def on_start(self):
+            """
+            각 가상 유저마다 다른 테스트 계정 사용
+            → 동일 email로 집중되는 캐시 히트 효과 제거
+            → 실제 findByEmail DB 조회가 발생하도록 유도
+            """
+            self.user_credentials = random.choice(TEST_USERS)
+
+        @task
+        def login(self):
+            """
+            로그인 API 호출 흐름:
+              POST /api/v1/auth/login
+                → CustomUserDetailService.loadUserByUsername(email)
+                → UserRepository.findByEmail(email)   ← 핵심 측정 지점
+                → BCrypt 비밀번호 검증
+                → Redis SETEX refreshToken               ← Write-around
+            """
+            with self.client.post(
+                "/api/v1/auth/login",
+                json=self.user_credentials,
+                headers={"Content-Type": "application/json"},
+                name="POST /api/v1/auth/login",
+                catch_response=True
+            ) as response:
+                if response.status_code == 200:
+                    response.success()
+                elif response.status_code == 401:
+                    # 테스트 유저 미생성 시 발생 → seed SQL 실행 필요
+                    response.failure(f"Auth failed (seed 미실행?): {response.text}")
+                else:
+                    response.failure(f"Unexpected {response.status_code}: {response.text}")

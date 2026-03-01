@@ -1,0 +1,46 @@
+##############################################################
+# [1단계] 베이스라인 측정
+#
+# 조건:
+#   - HikariCP maximum-pool-size: 10 (Spring Boot 기본값)
+#   - 동시 가상 유저: 100명
+#   - 워커 Pod: 3대 분산 실행
+#   - 실행 시간: 5분
+#
+# 기대 결과:
+#   - p99 레이턴시 급증 확인
+#   - OTel Tempo에서 findByEmail span 대기 시간 증가 확인
+#   - Grafana에서 HikariCP 커넥션 대기(PendingAcquisition) 확인
+##############################################################
+apiVersion: locust.io/v1alpha1
+kind: LocustTest
+metadata:
+  name: portfogram-login-baseline
+  namespace: load-testing
+  annotations:
+    test/phase: "baseline"
+    test/hikaricp-pool-size: "10"
+    test/description: "HikariCP pool 기본값(10) 상태에서 동시 100명 로그인 부하 측정"
+spec:
+  masterImage: locustio/locust:2.20.0
+  workerImage: locustio/locust:2.20.0
+  # 분산 부하: 워커 3대 × 약 33명 = 총 100명 동시 유저
+  workerReplicas: 3
+  configMap: locust-scripts
+  locustFile: locustfile.py
+  # -u: 최대 동시 유저 수 / -r: 초당 유저 증가 수 / --run-time: 테스트 시간
+  masterCommandSeed: "--headless -u 100 -r 10 --run-time 5m --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080"
+  masterResources:
+    requests:
+      cpu: "500m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"
+  workerResources:
+    requests:
+      cpu: "250m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
