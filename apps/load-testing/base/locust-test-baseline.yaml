@@ -27,5 +27,5 @@ spec:
   workerReplicas: 3
   configMap: locust-scripts
   # -u: 최대 동시 유저 수 / -r: 초당 유저 증가 수 / --run-time: 테스트 시간
-  masterCommandSeed: "--headless -u 100 -r 10 --run-time 5m --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080"
-  workerCommandSeed: ""
+  masterCommandSeed: "--locustfile /lotest/src/locustfile.py --headless -u 100 -r 10 --run-time 5m --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080"
+  workerCommandSeed: "--locustfile /lotest/src/locustfile.py"

@@ -22,5 +22,5 @@ spec:
   image: locustio/locust:2.20.0
   workerReplicas: 3
   configMap: locust-scripts
-  masterCommandSeed: "--headless -u 100 -r 10 --run-time 5m --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080"
-  workerCommandSeed: ""
+  masterCommandSeed: "--locustfile /lotest/src/locustfile.py --headless -u 100 -r 10 --run-time 5m --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080"
+  workerCommandSeed: "--locustfile /lotest/src/locustfile.py"
