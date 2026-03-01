@@ -14,8 +14,7 @@ spec:
     repoURL: https://github.com/minina0407/portfogram-manifest.git
     targetRevision: HEAD
     path: apps/monitoring/base/promtail
-    kustomize:
-      enableHelm: true
+    kustomize: {}
   syncPolicy:
     automated:
       prune: true
