@@ -1,0 +1,13 @@
+# portfogram 네임스페이스에서 redis 호스트명으로 Redis 서비스에 접근하기 위한 ExternalName
+# application.properties: spring.data.redis.host=redis.redis → Lettuce가 "redis" 단순명으로 요청
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: ExternalName
+  externalName: redis.redis.svc.cluster.local
+  ports:
+    - port: 6379
+      targetPort: 6379
