@@ -99,7 +99,7 @@ data:
         @task(5)
         def browse_feed(self):
             """피드 목록 조회 (페이지 랜덤)"""
-            page = random.randint(0, 3)
+            page = random.randint(0, 20)
             ids = fetch_portfolio_ids(self.client, page=page, size=10)
             if ids:
                 self._portfolio_ids = ids
@@ -157,7 +157,7 @@ data:
         @task(4)
         def browse_and_like(self):
             """피드 조회 후 랜덤 포트폴리오 좋아요"""
-            ids = fetch_portfolio_ids(self.client, page=random.randint(0, 2), size=10)
+            ids = fetch_portfolio_ids(self.client, page=random.randint(0, 20), size=10)
             if not ids:
                 return
             self._portfolio_ids = ids
@@ -232,7 +232,7 @@ data:
         @task(3)
         def browse_and_comment(self):
             """피드 조회 → 상세 조회 → 댓글 작성 → 댓글 재조회"""
-            ids = fetch_portfolio_ids(self.client, page=random.randint(0, 2), size=10)
+            ids = fetch_portfolio_ids(self.client, page=random.randint(0, 20), size=10)
             if not ids:
                 return
             pid = random.choice(ids)
