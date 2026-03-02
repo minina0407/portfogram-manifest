@@ -5,18 +5,44 @@
 #   Argo Rollouts Blue-Green 배포 진행 중 지속적인 부하를 유지하여
 #   트래픽 전환 시점의 에러율 및 레이턴시 변화 측정
 #
-# 사용 방법:
-#   1. 이 LocustTest 적용하여 부하 시작 (50명 지속)
-#   2. 부하 진행 중 Argo Rollouts 배포 트리거:
+# ── 시간축 (타이밍 기준) ──────────────────────────────────
+#   0~2분   : Ramp-up (0→50명)
+#   2~5분   : 안정 구간 (기존 Blue 버전, Scenario A 기준선 확인)
+#   5분     : ★ Blue-Green promotion 트리거 (수동 실행)
+#              kubectl argo rollouts set image rollout/spring-portfogram-server \
+#                spring-portfogram-server=<new-image> -n portfogram
+#   5~7분   : 전환 관찰 구간 (Green 파드 기동 + 트래픽 전환)
+#              → 이 구간에서 에러율·p95·pending 그래프가 튀는지 확인
+#   7~15분  : 전환 후 안정화 구간 (Green 버전 steady state)
+#              → 기준선(Scenario A) 대비 회복 여부 판단
+#
+# ── 합격 기준 (Pass Criteria) ──────────────────────────────
+#   에러율        : 전환 중(5~7분) 5xx < 0.1%
+#   p95 레이턴시  : 전환 후 2분 이내 기준선 ±10% 이내 복귀
+#                   (Scenario A p95 기준 × 1.10 이하)
+#   p99 레이턴시  : 전환 후 2분 이내 기준선 ±20% 이내 복귀
+#   커넥션 드랍   : hikaricp_connection_timeout_total 증가 없음
+#   Pod restart   : 0 (Green 파드 OOM·Crash 없음)
+#
+#   판단 기준 예시 (Scenario A 결과 기입 후 채울 것):
+#     Scenario A p95 기준: ____ms  → 합격선: ____ × 1.10 = ____ms
+#     Scenario A p99 기준: ____ms  → 합격선: ____ × 1.20 = ____ms
+#
+# ── 사용 방법 ──────────────────────────────────────────────
+#   1. 이 LocustTest 적용하여 부하 시작
+#      kubectl apply -f locust-test-scenario-b.yaml
+#   2. Grafana에서 타이머 확인 (테스트 시작 후 5분 시점)
+#   3. 5분 시점에 이미지 교체로 배포 트리거:
 #      kubectl argo rollouts set image rollout/spring-portfogram-server \
 #        spring-portfogram-server=<new-image> -n portfogram
-#   3. 자동 프로모션 또는 수동 프로모션:
+#   4. 자동 프로모션 또는 수동 프로모션:
 #      kubectl argo rollouts promote spring-portfogram-server -n portfogram
+#   5. Grafana에서 5분 지점에 수직 annotation 마킹 후 스크린샷
 #
-# 합격 기준:
-#   - Blue→Green 전환 중 5xx 에러율 < 0.1%
-#   - p95 레이턴시 전환 후 2분 내 정상 복귀
-#   - 전환 시 커넥션 드랍 없음 (Prometheus 확인)
+# 측정 지표:
+#   - Locust: 에러율, p95/p99 (1분 단위 추이)
+#   - Prometheus: hikaricp_connections_pending, connection_timeout_total
+#   - Grafana: pod 수 변화 (Blue→Green 전환 확인)
 ##############################################################
 apiVersion: locust.io/v1
 kind: LocustTest
@@ -26,6 +52,8 @@ metadata:
   annotations:
     test/phase: "scenario-b"
     test/description: "Blue-Green 배포 중 지속 부하 검증 (50 users, 15min)"
+    test/trigger-at: "5min - kubectl argo rollouts promote"
+    test/pass-criteria: "5xx<0.1%, p95 복귀 기준선±10% within 2min"
 spec:
   image: locustio/locust:2.20.0
   workerReplicas: 2

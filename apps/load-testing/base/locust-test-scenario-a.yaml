@@ -3,7 +3,7 @@
 #
 # 목적:
 #   실제 사용자 행동(60/30/10 비율)으로 HikariCP 기본 설정(pool=10)
-#   하에서 p95/p99 레이턴시 정량 측정
+#   하에서 p95/p99 레이턴시 정량 측정 → B·C의 비교 기준값 확립
 #
 # 조건:
 #   - 가상 유저: 50명 (EyeballerUser 30명, Interactive 15명, Active 5명)
@@ -11,10 +11,31 @@
 #   - 실행 시간: 10분
 #   - HikariCP pool-size: 10 (기본값)
 #
+# 시간축:
+#   0~2분   : 유저 증가 구간 (Ramp-up, 0→50명)
+#   2~10분  : 안정 구간 (Steady state) ← 이 구간의 평균값이 기준선
+#
+# ── 합격 기준 (Pass Criteria) ──────────────────────────────
+#   에러율        : 0% ~ 0.1% 이하 (5xx 기준)
+#   p95 레이턴시  : 500ms 이하
+#   p99 레이턴시  : 1,000ms 이하
+#   RPS           : 30 req/s 이상 유지
+#
+#   HikariCP:
+#     hikaricp_connections_pending   : 안정 구간 평균 0~1 수준
+#     hikaricp_connections_active    : 최대 10 (pool-size 상한)
+#     hikaricp_connection_timeout_total: 0 (타임아웃 없음)
+#
+#   인프라 (spring-boot pod 기준):
+#     CPU    : 평균 200m 이하, 최대 500m 이하
+#     Memory : 평균 400Mi 이하
+#     Pod restart: 0
+#
 # 측정 지표:
 #   - Locust: p50/p95/p99 엔드포인트별 레이턴시
 #   - Tempo: findByEmail span 대기 시간 분포
 #   - Prometheus: hikaricp_connections_pending 카운트
+#   - Grafana: CPU / Memory / JVM Heap 추이
 ##############################################################
 apiVersion: locust.io/v1
 kind: LocustTest
@@ -25,6 +46,7 @@ metadata:
     test/phase: "scenario-a"
     test/hikaricp-pool-size: "10"
     test/description: "혼합 트래픽 기준선 측정 (50 users, 10min)"
+    test/pass-criteria: "error<0.1%, p95<500ms, p99<1000ms, pending≈0"
 spec:
   image: locustio/locust:2.20.0
   workerReplicas: 2
