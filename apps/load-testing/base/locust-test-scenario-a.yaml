@@ -49,7 +49,7 @@ metadata:
     test/pass-criteria: "error<0.1%, p95<500ms, p99<1000ms, pending≈0"
 spec:
   image: locustio/locust:2.20.0
-  workerReplicas: 2
+  workerReplicas: 1
   configMap: locust-scripts
   masterCommandSeed: >-
     --locustfile /lotest/src/locustfile.py
