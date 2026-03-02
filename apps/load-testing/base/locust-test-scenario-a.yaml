@@ -53,7 +53,8 @@ spec:
   configMap: locust-scripts
   masterCommandSeed: >-
     --locustfile /lotest/src/locustfile.py
-    --headless
+    --autostart
+    --web-port 8089
     -u 50
     -r 5
     --run-time 10m

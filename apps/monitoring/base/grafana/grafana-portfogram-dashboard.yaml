@@ -1,0 +1,247 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-portfogram-dashboard
+  namespace: observability
+data:
+  portfogram.json: |
+    {
+      "title": "PortfoGram - HikariCP 부하 테스트",
+      "uid": "portfogram-load-test",
+      "tags": ["portfogram", "hikaricp", "load-test"],
+      "refresh": "5s",
+      "time": { "from": "now-15m", "to": "now" },
+      "timepicker": {},
+      "schemaVersion": 38,
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "HikariCP 커넥션 풀 현황",
+          "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Pending (대기 중)",
+          "description": "커넥션 풀에서 대기 중인 요청 수. 이 값이 오르면 병목 발생.",
+          "gridPos": { "x": 0, "y": 1, "w": 6, "h": 4 },
+          "datasource": { "uid": "prometheus", "type": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 1 },
+                  { "color": "red", "value": 5 }
+                ]
+              },
+              "unit": "short",
+              "mappings": []
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background", "graphMode": "area", "justifyMode": "auto" },
+          "targets": [
+            {
+              "datasource": { "uid": "prometheus" },
+              "expr": "hikaricp_connections_pending{namespace=\"portfogram\"}",
+              "legendFormat": "pending",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Active (사용 중)",
+          "description": "현재 사용 중인 커넥션 수. 최대 pool-size(10)까지.",
+          "gridPos": { "x": 6, "y": 1, "w": 6, "h": 4 },
+          "datasource": { "uid": "prometheus", "type": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "blue", "value": null },
+                  { "color": "orange", "value": 8 },
+                  { "color": "red", "value": 10 }
+                ]
+              },
+              "unit": "short",
+              "max": 10
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background", "graphMode": "area", "justifyMode": "auto" },
+          "targets": [
+            {
+              "datasource": { "uid": "prometheus" },
+              "expr": "hikaricp_connections_active{namespace=\"portfogram\"}",
+              "legendFormat": "active",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Idle (유휴)",
+          "gridPos": { "x": 12, "y": 1, "w": 6, "h": 4 },
+          "datasource": { "uid": "prometheus", "type": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              },
+              "unit": "short"
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto" },
+          "targets": [
+            {
+              "datasource": { "uid": "prometheus" },
+              "expr": "hikaricp_connections_idle{namespace=\"portfogram\"}",
+              "legendFormat": "idle",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "Connection Timeout",
+          "description": "0이면 정상. 1 이상이면 커넥션 풀 병목 확정.",
+          "gridPos": { "x": 18, "y": 1, "w": 6, "h": 4 },
+          "datasource": { "uid": "prometheus", "type": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 1 }
+                ]
+              },
+              "unit": "short"
+            }
+          },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "auto" },
+          "targets": [
+            {
+              "datasource": { "uid": "prometheus" },
+              "expr": "hikaricp_connection_timeout_total{namespace=\"portfogram\"}",
+              "legendFormat": "timeout",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "HikariCP 커넥션 풀 추이",
+          "description": "pending이 오르고 active가 10에 붙어있으면 병목. pool-size 한계선(10)과 비교.",
+          "gridPos": { "x": 0, "y": 5, "w": 24, "h": 8 },
+          "datasource": { "uid": "prometheus", "type": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "custom": { "lineWidth": 2, "fillOpacity": 10 } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "pending" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "active" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "idle" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "pool-size" }, "properties": [{ "id": "color", "value": { "fixedColor": "gray", "mode": "fixed" } }, { "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }] }
+            ]
+          },
+          "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "targets": [
+            { "datasource": { "uid": "prometheus" }, "expr": "hikaricp_connections_pending{namespace=\"portfogram\"}", "legendFormat": "pending", "refId": "A" },
+            { "datasource": { "uid": "prometheus" }, "expr": "hikaricp_connections_active{namespace=\"portfogram\"}", "legendFormat": "active", "refId": "B" },
+            { "datasource": { "uid": "prometheus" }, "expr": "hikaricp_connections_idle{namespace=\"portfogram\"}", "legendFormat": "idle", "refId": "C" },
+            { "datasource": { "uid": "prometheus" }, "expr": "hikaricp_connections_max{namespace=\"portfogram\"}", "legendFormat": "pool-size", "refId": "D" }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "row",
+          "title": "HTTP 응답 성능",
+          "gridPos": { "x": 0, "y": 13, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "HTTP 레이턴시 (p50 / p95 / p99)",
+          "description": "병목 시 p99가 급격히 상승. 기준선: p95 < 500ms, p99 < 1000ms",
+          "gridPos": { "x": 0, "y": 14, "w": 12, "h": 8 },
+          "datasource": { "uid": "prometheus", "type": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "s", "custom": { "lineWidth": 2 } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "p99" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "p95" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "p50" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] }
+            ]
+          },
+          "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "targets": [
+            { "datasource": { "uid": "prometheus" }, "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{namespace=\"portfogram\"}[1m])) by (le))", "legendFormat": "p50", "refId": "A" },
+            { "datasource": { "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"portfogram\"}[1m])) by (le))", "legendFormat": "p95", "refId": "B" },
+            { "datasource": { "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{namespace=\"portfogram\"}[1m])) by (le))", "legendFormat": "p99", "refId": "C" }
+          ]
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "RPS / 에러율",
+          "description": "에러율 기준선: 0.1% 이하",
+          "gridPos": { "x": 12, "y": 14, "w": 12, "h": 8 },
+          "datasource": { "uid": "prometheus", "type": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "custom": { "lineWidth": 2 } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "RPS" }, "properties": [{ "id": "unit", "value": "reqps" }, { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Error %" }, "properties": [{ "id": "unit", "value": "percentunit" }, { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }, { "id": "custom.axisPlacement", "value": "right" }] }
+            ]
+          },
+          "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "targets": [
+            { "datasource": { "uid": "prometheus" }, "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"portfogram\"}[1m]))", "legendFormat": "RPS", "refId": "A" },
+            { "datasource": { "uid": "prometheus" }, "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"portfogram\", status=~\"5..\"}[1m])) / sum(rate(http_server_requests_seconds_count{namespace=\"portfogram\"}[1m]))", "legendFormat": "Error %", "refId": "B" }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "row",
+          "title": "엔드포인트별 레이턴시",
+          "gridPos": { "x": 0, "y": 22, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 11,
+          "type": "timeseries",
+          "title": "엔드포인트별 p95",
+          "description": "어떤 API가 느린지 확인",
+          "gridPos": { "x": 0, "y": 23, "w": 24, "h": 8 },
+          "datasource": { "uid": "prometheus", "type": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "s", "custom": { "lineWidth": 1 } }
+          },
+          "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "datasource": { "uid": "prometheus" },
+              "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"portfogram\"}[1m])) by (le, uri))",
+              "legendFormat": "{{uri}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
+    }
