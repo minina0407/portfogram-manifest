@@ -10,7 +10,7 @@ fullnameOverride: ""
 nameOverride: ""
 
 # Replica 설정
-replicaCount: 2
+replicaCount: 1
 
 # Security
 podSecurityContext:
