@@ -58,6 +58,9 @@ serviceAccount:
 podAnnotations: {}
 
 env:
+  # HikariCP pool-size 의도적 병목 (부하 테스트용)
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+  SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "10"
   # OpenTelemetry 관련 환경 변수 추가
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc.cluster.local:4317"
   JAVA_TOOL_OPTIONS: >-
