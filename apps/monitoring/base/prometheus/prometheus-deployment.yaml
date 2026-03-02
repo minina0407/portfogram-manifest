@@ -29,7 +29,6 @@ spec:
             - "--web.external-url=http://127.0.0.1:9090"
             - "--storage.tsdb.min-block-duration=2h"
             - "--storage.tsdb.max-block-duration=2h"
-            - "--enable-feature=exemplar-storage"
           ports:
             - containerPort: 9090
           readinessProbe:
