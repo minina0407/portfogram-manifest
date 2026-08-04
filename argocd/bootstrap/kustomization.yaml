@@ -5,6 +5,7 @@ resources:
   - cert-manager.yaml
   - cert-manager-issuers.yaml
   - argo-rollouts.yaml
+  - argocd-image-updater.yaml
   - opentelemetry-operator.yaml
   - sealed-secrets.yaml
   - ingress-nginx.yaml
