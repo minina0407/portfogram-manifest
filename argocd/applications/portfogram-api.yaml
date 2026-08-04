@@ -3,6 +3,14 @@ kind: Application
 metadata:
   name: portfogram-api
   namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: portfogram-api=minimeisme/portfogram-api
+    argocd-image-updater.argoproj.io/portfogram-api.update-strategy: latest
+    argocd-image-updater.argoproj.io/portfogram-api.helm.image-name: image.repository
+    argocd-image-updater.argoproj.io/portfogram-api.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/git-creds
+    argocd-image-updater.argoproj.io/write-back-target: helmvalues:./values-portfogram-api-dev.yaml
+    argocd-image-updater.argoproj.io/git-branch: main
 spec:
   destination:
     namespace: portfogram
