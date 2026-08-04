@@ -4,3 +4,12 @@ kind: Kustomization
 resources:
   - ../../base
 
+patches:
+  - target:
+      kind: StatefulSet
+      name: redis
+    patch: |-
+      - op: replace
+        path: /spec/volumeClaimTemplates/0/spec/storageClassName
+        value: standard
+

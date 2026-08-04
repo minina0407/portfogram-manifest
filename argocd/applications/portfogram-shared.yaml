@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/tracking-id: portfogram:argoproj.io/Application:argocd/portfogram-shared
+    # portfogram-api/auth/chat이 의존하는 Namespace/Secret/redis 접근점을 먼저 만들어야 함.
+    # 예전엔 이 3개 리소스를 서비스별 Application이 각자 소유하려다 충돌났었음 -> 공유 리소스로 분리
+    argocd.argoproj.io/sync-wave: "-1"
+  name: portfogram-shared
+  namespace: argocd
+spec:
+  destination:
+    namespace: portfogram
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: apps/portfogram-shared
+    repoURL: https://github.com/minina0407/portfogram-manifest.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

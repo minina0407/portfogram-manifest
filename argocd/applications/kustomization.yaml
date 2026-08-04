@@ -3,6 +3,10 @@ kind: Kustomization
 
 resources:
   - monitoring.yaml
-  - spring-boot.yaml
+  - portfogram-shared.yaml
+  - portfogram-api.yaml
+  - portfogram-auth.yaml
+  - portfogram-chat.yaml
   - redis.yaml
+  - rabbitmq.yaml
   - load-testing.yaml
