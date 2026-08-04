@@ -1,0 +1,80 @@
+# portfogram-chat - 채팅/메시지 워커 서비스
+# 배포 전략: Canary (Argo Rollouts)
+# 이유: 채팅 워커는 새 버전을 소량 트래픽에 먼저 노출(20%)해서
+#       메시지 처리 오류 없는지 확인 후 100%로 점진적 전환
+
+image:
+  repository: minimeisme/portfogram-chat
+  tag: "latest"
+  pullPolicy: Always
+
+replicaCount: 2
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 2000
+  fsGroup: 3000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  privileged: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+container:
+  httpPort: 8080
+  managementPort: 8081
+
+metrics:
+  enabled: true
+  path: "/actuator/prometheus"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+secret:
+  enabled: true
+  name: database-credentials
+
+probes:
+  readiness:
+    enabled: true
+    path: /actuator/health/readiness
+  liveness:
+    enabled: true
+    path: /actuator/health/liveness
+  startup:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 30
+    timeoutSeconds: 5
+
+# Canary 전략: 20% → 30초 대기 → 50% → 30초 대기 → 100%
+strategy:
+  type: canary
+
+rollout:
+  canary:
+    steps:
+      - setWeight: 20
+      - pause:
+          duration: 30s
+      - setWeight: 50
+      - pause:
+          duration: 30s
+
+ingress:
+  enabled: false
+
+networkPolicy:
+  enabled: false
+
+serviceAccount:
+  create: false
+  name: ""

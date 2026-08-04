@@ -1,9 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: spring-portfogram-server
+  name: {{ include "app.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.service.type }}
   ports:
     - name: http
       port: {{ .Values.service.port }}
@@ -14,5 +17,4 @@ spec:
       targetPort: management
       protocol: TCP
   selector:
-    app.kubernetes.io/instance: spring
-    app.kubernetes.io/name: portfogram-server
+    {{- include "app.selectorLabels" . | nindent 4 }}

@@ -30,6 +30,9 @@ spec:
       containers:
         - name: redis
           image: redis:latest
+          # 모든 서비스의 application.properties가 spring.data.redis.password=redis를 기대하므로
+          # requirepass를 명시적으로 켜야 함 (안 켜져 있으면 AUTH 실패)
+          command: ["redis-server", "--requirepass", "redis"]
           ports:
             - containerPort: 6379
               name: redis

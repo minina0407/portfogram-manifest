@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portfogram-auth
+  namespace: argocd
+spec:
+  destination:
+    namespace: portfogram
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    helm:
+      valueFiles:
+        - values-portfogram-auth-dev.yaml
+    path: apps/spring-boot
+    repoURL: https://github.com/minina0407/portfogram-manifest.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
