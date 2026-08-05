@@ -31,3 +31,6 @@ spec:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - PruneLast=true
+      # observability(ServiceMonitor CRD 제공) sync-wave가 아직 안 끝났어도
+      # dry-run 검증만 건너뛰고 나머지 리소스는 정상 적용되게 함
+      - SkipDryRunOnMissingResource=true
