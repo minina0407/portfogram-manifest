@@ -5,7 +5,7 @@
 
 image:
   repository: minimeisme/portfogram-api
-  tag: "latest"
+  tag: "09592b0dfbe2fa7b6ae85859ff09d645436ecaa0"
   pullPolicy: Always
 
 replicaCount: 2
