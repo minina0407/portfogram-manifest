@@ -5,11 +5,9 @@
 
 image:
   repository: minimeisme/portfogram-chat
-  tag: "09592b0dfbe2fa7b6ae85859ff09d645436ecaa0"
+  tag: "8b17987f8c130c98ae2901882b71eef9db5978ce"
   pullPolicy: Always
-
 replicaCount: 2
-
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1000
@@ -17,31 +15,25 @@ podSecurityContext:
   fsGroup: 3000
   seccompProfile:
     type: RuntimeDefault
-
 securityContext:
   allowPrivilegeEscalation: false
   privileged: false
   capabilities:
     drop:
-      - ALL
+    - ALL
   readOnlyRootFilesystem: false
-
 container:
   httpPort: 8080
   managementPort: 8081
-
 metrics:
   enabled: true
   path: "/actuator/prometheus"
-
 service:
   type: ClusterIP
   port: 8080
-
 secret:
   enabled: true
   name: database-credentials
-
 probes:
   readiness:
     enabled: true
@@ -54,27 +46,22 @@ probes:
     periodSeconds: 10
     failureThreshold: 30
     timeoutSeconds: 5
-
 # Canary 전략: 20% → 30초 대기 → 50% → 30초 대기 → 100%
 strategy:
   type: canary
-
 rollout:
   canary:
     steps:
-      - setWeight: 20
-      - pause:
-          duration: 30s
-      - setWeight: 50
-      - pause:
-          duration: 30s
-
+    - setWeight: 20
+    - pause:
+        duration: 30s
+    - setWeight: 50
+    - pause:
+        duration: 30s
 ingress:
   enabled: false
-
 networkPolicy:
   enabled: false
-
 serviceAccount:
   create: false
   name: ""
