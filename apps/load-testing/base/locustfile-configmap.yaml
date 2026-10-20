@@ -75,7 +75,12 @@ data:
                 try:
                     data = resp.json()
                     # 응답 구조에 따라 파싱 (content[] 또는 직접 list)
-                    items = data.get("content") or data if isinstance(data, list) else []
+                    if isinstance(data, dict):
+                        items = data.get("content") or []
+                    elif isinstance(data, list):
+                        items = data
+                    else:
+                        items = []
                     ids = [item.get("portfolioId") or item.get("id") for item in items if item]
                     return [pid for pid in ids if pid is not None]
                 except Exception:
