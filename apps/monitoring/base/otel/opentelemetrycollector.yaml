@@ -59,7 +59,7 @@ spec:
                 - source_labels:
                     [__meta_kubernetes_pod_label_app_kubernetes_io_name]
                   action: keep
-                  regex: portfogram-server
+                  regex: portfogram-(api|auth|chat)
                 - source_labels:
                     [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
                   action: keep
