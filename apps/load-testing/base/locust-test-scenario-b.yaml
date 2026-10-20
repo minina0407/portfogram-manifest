@@ -9,8 +9,8 @@
 #   0~2분   : Ramp-up (0→50명)
 #   2~5분   : 안정 구간 (기존 Blue 버전, Scenario A 기준선 확인)
 #   5분     : ★ Blue-Green promotion 트리거 (수동 실행)
-#              kubectl argo rollouts set image rollout/spring-portfogram-server \
-#                spring-portfogram-server=<new-image> -n portfogram
+#              kubectl argo rollouts set image rollout/portfogram-api \
+#                portfogram-api=<new-image> -n portfogram
 #   5~7분   : 전환 관찰 구간 (Green 파드 기동 + 트래픽 전환)
 #              → 이 구간에서 에러율·p95·pending 그래프가 튀는지 확인
 #   7~15분  : 전환 후 안정화 구간 (Green 버전 steady state)
@@ -33,10 +33,10 @@
 #      kubectl apply -f locust-test-scenario-b.yaml
 #   2. Grafana에서 타이머 확인 (테스트 시작 후 5분 시점)
 #   3. 5분 시점에 이미지 교체로 배포 트리거:
-#      kubectl argo rollouts set image rollout/spring-portfogram-server \
-#        spring-portfogram-server=<new-image> -n portfogram
+#      kubectl argo rollouts set image rollout/portfogram-api \
+#        portfogram-api=<new-image> -n portfogram
 #   4. 자동 프로모션 또는 수동 프로모션:
-#      kubectl argo rollouts promote spring-portfogram-server -n portfogram
+#      kubectl argo rollouts promote portfogram-api -n portfogram
 #   5. Grafana에서 5분 지점에 수직 annotation 마킹 후 스크린샷
 #
 # 측정 지표:
@@ -64,5 +64,5 @@ spec:
     -u 50
     -r 5
     --run-time 15m
-    --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080
+    --host http://portfogram-api.portfogram.svc.cluster.local:8080
   workerCommandSeed: "--locustfile /lotest/src/locustfile.py"
