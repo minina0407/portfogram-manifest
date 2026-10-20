@@ -105,7 +105,7 @@ data:
                 - portfogram
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
-            regex: portfogram-server
+            regex: portfogram-(api|auth|chat)
             action: keep
           - source_labels: [__meta_kubernetes_pod_ip]
             target_label: __address__
@@ -114,7 +114,10 @@ data:
             target_label: kubernetes_namespace
           - source_labels: [__meta_kubernetes_pod_name]
             target_label: kubernetes_pod_name
-            
+          # 서비스(release)별로 메트릭을 구분해서 조회하기 위한 라벨
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+            target_label: app_instance
+
 
   rules.yml: |
     groups:
