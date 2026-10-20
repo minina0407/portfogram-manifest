@@ -130,6 +130,10 @@ spec:
               value: "otlp"
             - name: OTEL_EXPORTER_OTLP_INSECURE
               value: "true"
+            {{- range $name, $value := .Values.env }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
       dnsConfig:
         options:
           - name: ndots
