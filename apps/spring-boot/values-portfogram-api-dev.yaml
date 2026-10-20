@@ -34,6 +34,9 @@ service:
 secret:
   enabled: true
   name: database-credentials
+# 추가 환경 변수 (application.properties 값을 덮어씀)
+# HikariCP 기본값은 앱의 application.properties에 있음 (api: max 50 / min-idle 10)
+env: {}
 probes:
   readiness:
     enabled: true
