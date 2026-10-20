@@ -84,5 +84,5 @@ spec:
     -u 200
     -r 30
     --run-time 11m
-    --host http://spring-portfogram-server.portfogram.svc.cluster.local:8080
+    --host http://portfogram-api.portfogram.svc.cluster.local:8080
   workerCommandSeed: "--locustfile /lotest/src/locustfile.py"

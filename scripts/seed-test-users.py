@@ -7,7 +7,7 @@
 
 사용법:
   # 클러스터 내부 (kubectl port-forward 활용)
-  kubectl port-forward svc/spring-portfogram-server 8080:8080 -n portfogram &
+  kubectl port-forward svc/portfogram-auth 8080:8080 -n portfogram &
   python scripts/seed-test-users.py --host http://localhost:8080
 
   # 이미 생성된 유저 무시하고 재실행
